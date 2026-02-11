@@ -19,6 +19,7 @@ _Learn about the person you're helping. Update this as you go._
 - Project preference: real-world business-problem projects that clearly demonstrate recruiter/employer value (as of Feb 2026).
 - Interests: computers, digital/analog photography, music.
 - Income focus preference: freelance services and consulting first; broader multiple-income-stream exploration ongoing.
+- Long-term financial objective: build at least 7 income streams to reduce future financial risk.
 
 ---
 
