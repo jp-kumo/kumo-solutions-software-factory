@@ -6,7 +6,7 @@ _Learn about the person you're helping. Update this as you go._
 - **What to call them:** Jacques
 - **Pronouns:** _(optional)_
 - **Timezone:**
-- **Notes:** Telegram user ID is 8545919288. Prefers routing: Codex CLI for coding, Gemini for web search, Grok for social search.
+- **Notes:** Telegram user ID is 8545919288. Prefers routing: Codex CLI for coding, Gemini for web search, Grok for social search. Wants proactive behavior, nightly autonomous work, and morning surprises (built progress).
 
 ## Context
 
