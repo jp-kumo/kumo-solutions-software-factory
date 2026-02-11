@@ -34,6 +34,7 @@ Things like:
 ### Telegram
 
 - Bot username: @Liam_in_the_Cloud_Bot
+- Jacques Telegram user ID: 8545919288
 
 ## Why Separate?
 
