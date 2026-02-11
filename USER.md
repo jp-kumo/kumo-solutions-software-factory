@@ -6,7 +6,7 @@ _Learn about the person you're helping. Update this as you go._
 - **What to call them:** Jacques
 - **Pronouns:** _(optional)_
 - **Timezone:** America/Chicago (Little Rock, AR)
-- **Notes:** Telegram user ID is 8545919288. Prefers routing: Codex CLI for coding, Gemini for web search, Grok for social search. Wants proactive behavior, nightly autonomous work, and morning surprises (built progress).
+- **Notes:** Telegram user ID is 8545919288. Prefers routing: Codex CLI for coding, Gemini for web search, Grok for social search. Wants proactive behavior, nightly autonomous work, and morning surprises (built progress). Typical target schedule: sleep ~11:00 PM and wake ~8:00 AM America/Chicago.
 
 ## Context
 
@@ -16,8 +16,9 @@ _Learn about the person you're helping. Update this as you go._
 - Recent certs: AWS Solutions Architect Associate, AWS Machine Learning Engineer Associate, OCI 2025 Generative AI Professional.
 - Next certification target: Terraform Associate.
 - Goal: build portfolio projects for March 2026 hiring season.
+- Project preference: real-world business-problem projects that clearly demonstrate recruiter/employer value (as of Feb 2026).
 - Interests: computers, digital/analog photography, music.
-- Wants to explore building multiple income streams while between roles.
+- Income focus preference: freelance services and consulting first; broader multiple-income-stream exploration ongoing.
 
 ---
 
