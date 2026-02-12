@@ -6,7 +6,7 @@ from pathlib import Path
 
 import uvicorn
 import webview
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, HttpUrl
@@ -36,6 +36,18 @@ class TranscriptRequest(BaseModel):
     fmt: str
 
 
+def _handle_service_error(exc: Exception) -> None:
+    """Convert service-layer exceptions into API-friendly HTTP errors."""
+    if isinstance(exc, ValueError):
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    # Network/provider failures from transcript/video fetches
+    if isinstance(exc, RuntimeError):
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    raise HTTPException(status_code=500, detail="Internal server error") from exc
+
+
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
@@ -44,34 +56,52 @@ def health():
 @app.get("/api/info")
 def info(url: str):
     # Backward-compatible GET endpoint
-    return get_video_info(url)
+    try:
+        return get_video_info(url)
+    except Exception as exc:
+        _handle_service_error(exc)
 
 
 @app.post("/api/info")
 def info_post(payload: UrlRequest):
-    return get_video_info(str(payload.url))
+    try:
+        return get_video_info(str(payload.url))
+    except Exception as exc:
+        _handle_service_error(exc)
 
 
 @app.get("/api/download")
 def download(url: str):
     # Backward-compatible GET endpoint
-    return download_video(url)
+    try:
+        return download_video(url)
+    except Exception as exc:
+        _handle_service_error(exc)
 
 
 @app.post("/api/download")
 def download_post(payload: UrlRequest):
-    return download_video(str(payload.url))
+    try:
+        return download_video(str(payload.url))
+    except Exception as exc:
+        _handle_service_error(exc)
 
 
 @app.get("/api/transcript")
 def transcript(url: str, video_id: str, title: str, fmt: str):
     # Backward-compatible GET endpoint
-    return save_transcript(video_id, title, fmt, url)
+    try:
+        return save_transcript(video_id, title, fmt, url)
+    except Exception as exc:
+        _handle_service_error(exc)
 
 
 @app.post("/api/transcript")
 def transcript_post(payload: TranscriptRequest):
-    return save_transcript(payload.video_id, payload.title, payload.fmt, str(payload.url))
+    try:
+        return save_transcript(payload.video_id, payload.title, payload.fmt, str(payload.url))
+    except Exception as exc:
+        _handle_service_error(exc)
 
 
 frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"

@@ -63,10 +63,23 @@ Then open: `http://localhost:8000`
 
 Supported transcript formats: `txt`, `md`, `pdf`.
 
+## Test the API (offline-friendly)
+
+A lightweight offline test file is included so basic API behavior can be validated without calling YouTube:
+
+```bash
+cd review_app
+python3 test_api_offline.py
+```
+
+The tests mock service calls and verify:
+- success behavior for `/api/info`
+- `400` mapping for invalid transcript format
+- `502` mapping for upstream transcript/provider failures
+
 ## Next recommended improvements
 
-1. Add API tests (success + failure paths).
-2. Add explicit input validation and friendlier error codes for transcript-not-available cases.
-3. Add configurable download quality profiles.
-4. Add background job/progress reporting for long downloads.
-5. Add persistent app settings (download path, preferred transcript format).
+1. Add end-to-end integration tests behind an optional network flag.
+2. Add configurable download quality profiles.
+3. Add background job/progress reporting for long downloads.
+4. Add persistent app settings (download path, preferred transcript format).
