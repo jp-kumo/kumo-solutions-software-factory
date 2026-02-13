@@ -26,6 +26,41 @@ class ApiOfflineTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["id"], "abc123")
 
+    @patch("backend.main.download_video")
+    def test_download_profile_passed_through(self, mock_download_video):
+        mock_download_video.return_value = {
+            "status": "success",
+            "path": "/tmp/downloads",
+            "quality_profile": "small",
+        }
+
+        response = self.client.post(
+            "/api/download",
+            json={
+                "url": "https://www.youtube.com/watch?v=abc123",
+                "quality_profile": "small",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["quality_profile"], "small")
+        mock_download_video.assert_called_once()
+
+    @patch("backend.main.download_video")
+    def test_download_invalid_profile_returns_400(self, mock_download_video):
+        mock_download_video.side_effect = ValueError("Unsupported quality profile 'ultra'.")
+
+        response = self.client.get(
+            "/api/download",
+            params={
+                "url": "https://www.youtube.com/watch?v=abc123",
+                "quality_profile": "ultra",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Unsupported quality profile", response.json()["detail"])
+
     @patch("backend.main.save_transcript")
     def test_transcript_invalid_format_returns_400(self, mock_save_transcript):
         mock_save_transcript.side_effect = ValueError("Unsupported format 'docx'.")

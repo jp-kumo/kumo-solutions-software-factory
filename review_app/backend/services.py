@@ -2,6 +2,7 @@ import os
 import re
 import textwrap
 from pathlib import Path
+from typing import Optional
 
 import yt_dlp
 from fpdf import FPDF
@@ -13,6 +14,11 @@ DOWNLOAD_DIR = os.environ.get(
 Path(DOWNLOAD_DIR).mkdir(parents=True, exist_ok=True)
 
 ALLOWED_TRANSCRIPT_FORMATS = {"txt", "md", "pdf"}
+QUALITY_PROFILES = {
+    "best": "bestvideo*+bestaudio/best",
+    "balanced": "best[ext=mp4]/best",
+    "small": "worst[ext=mp4]/worst",
+}
 
 
 def _safe_filename(name: str) -> str:
@@ -20,14 +26,21 @@ def _safe_filename(name: str) -> str:
     return cleaned or "video"
 
 
-from typing import Optional
-
-
 def _ffmpeg_location_if_local() -> Optional[str]:
     ffmpeg_binary = Path(__file__).resolve().parent / "ffmpeg"
     if ffmpeg_binary.exists():
         return str(ffmpeg_binary.parent)
     return None
+
+
+def _resolve_quality_profile(profile: str) -> str:
+    normalized = (profile or "balanced").lower().strip()
+    if normalized not in QUALITY_PROFILES:
+        raise ValueError(
+            f"Unsupported quality profile '{profile}'. "
+            f"Use one of: {sorted(QUALITY_PROFILES.keys())}"
+        )
+    return normalized
 
 
 def get_video_info(url: str):
@@ -42,9 +55,11 @@ def get_video_info(url: str):
         }
 
 
-def download_video(url: str):
+def download_video(url: str, quality_profile: str = "balanced"):
+    profile = _resolve_quality_profile(quality_profile)
+
     ydl_opts = {
-        "format": "best[ext=mp4]/best",
+        "format": QUALITY_PROFILES[profile],
         "outtmpl": str(Path(DOWNLOAD_DIR) / "%(title)s.%(ext)s"),
         "overwrites": True,
         "noplaylist": True,
@@ -57,7 +72,7 @@ def download_video(url: str):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
 
-    return {"status": "success", "path": DOWNLOAD_DIR}
+    return {"status": "success", "path": DOWNLOAD_DIR, "quality_profile": profile}
 
 
 def get_transcript_text(video_id: str):

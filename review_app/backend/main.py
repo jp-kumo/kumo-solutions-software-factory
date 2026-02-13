@@ -11,9 +11,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, HttpUrl
 
-from backend.services import download_video, get_video_info, save_transcript
+from backend.services import (
+    ALLOWED_TRANSCRIPT_FORMATS,
+    QUALITY_PROFILES,
+    download_video,
+    get_video_info,
+    save_transcript,
+)
 
-app = FastAPI(title="YT Downloader API", version="1.0.0")
+app = FastAPI(title="YT Downloader API", version="1.1.0")
 
 # Development-friendly CORS. Tighten in production if exposed remotely.
 app.add_middleware(
@@ -27,6 +33,11 @@ app.add_middleware(
 
 class UrlRequest(BaseModel):
     url: HttpUrl
+
+
+class DownloadRequest(BaseModel):
+    url: HttpUrl
+    quality_profile: str = "balanced"
 
 
 class TranscriptRequest(BaseModel):
@@ -53,6 +64,15 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/api/settings")
+def settings():
+    return {
+        "quality_profiles": sorted(QUALITY_PROFILES.keys()),
+        "transcript_formats": sorted(ALLOWED_TRANSCRIPT_FORMATS),
+        "default_quality_profile": "balanced",
+    }
+
+
 @app.get("/api/info")
 def info(url: str):
     # Backward-compatible GET endpoint
@@ -71,18 +91,18 @@ def info_post(payload: UrlRequest):
 
 
 @app.get("/api/download")
-def download(url: str):
+def download(url: str, quality_profile: str = "balanced"):
     # Backward-compatible GET endpoint
     try:
-        return download_video(url)
+        return download_video(url, quality_profile)
     except Exception as exc:
         _handle_service_error(exc)
 
 
 @app.post("/api/download")
-def download_post(payload: UrlRequest):
+def download_post(payload: DownloadRequest):
     try:
-        return download_video(str(payload.url))
+        return download_video(str(payload.url), payload.quality_profile)
     except Exception as exc:
         _handle_service_error(exc)
 

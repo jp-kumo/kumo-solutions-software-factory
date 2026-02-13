@@ -49,8 +49,10 @@ Then open: `http://localhost:8000`
 ## API summary
 
 - `GET /api/health`
+- `GET /api/settings` (supported transcript formats + download quality profiles)
 - `POST /api/info` with body `{ "url": "https://..." }`
-- `POST /api/download` with body `{ "url": "https://..." }`
+- `POST /api/download` with body `{ "url": "https://...", "quality_profile": "balanced" }`
+  - quality profiles: `best`, `balanced`, `small`
 - `POST /api/transcript` with body:
   ```json
   {
@@ -74,12 +76,19 @@ python3 test_api_offline.py
 
 The tests mock service calls and verify:
 - success behavior for `/api/info`
+- download quality profile passthrough + invalid profile handling
 - `400` mapping for invalid transcript format
 - `502` mapping for upstream transcript/provider failures
+
+Nightly/local check helper (from workspace root):
+```bash
+./scripts/review_app_nightly_check.sh
+```
+This runs Python syntax checks and, when `python3-venv` is available, executes offline unit tests.
 
 ## Next recommended improvements
 
 1. Add end-to-end integration tests behind an optional network flag.
-2. Add configurable download quality profiles.
-3. Add background job/progress reporting for long downloads.
-4. Add persistent app settings (download path, preferred transcript format).
+2. Add background job/progress reporting for long downloads.
+3. Add persistent app settings (download path, preferred transcript format + quality profile).
+4. Add frontend controls for selecting quality profile before download.
