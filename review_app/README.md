@@ -8,7 +8,7 @@ A desktop/web hybrid app to fetch YouTube metadata, download MP4 files, and expo
 - Added request models + `POST` endpoints (`/api/info`, `/api/download`, `/api/transcript`) while keeping old `GET` routes for compatibility.
 - Added backend health endpoint: `GET /api/health`.
 - Improved transcript format validation and filename sanitization.
-- Updated frontend to call `POST` APIs and display backend error details when available.
+- Updated frontend to call `POST` APIs, load backend settings dynamically, and support quality-profile selection before download.
 - Added `.gitignore` to avoid committing heavy/local artifacts (`venv`, zips, build outputs).
 
 ## Project structure
@@ -84,7 +84,7 @@ Nightly/local check helper (from workspace root):
 ```bash
 ./scripts/review_app_nightly_check.sh
 ```
-This runs Python syntax checks and, when `python3-venv` is available, executes offline unit tests.
+This runs Python syntax checks, backend offline tests in an isolated venv, and a frontend production build smoke test (`npm ci && npm run build`).
 
 ## Next recommended improvements
 

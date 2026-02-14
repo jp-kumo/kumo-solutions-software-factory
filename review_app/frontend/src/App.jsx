@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, Youtube, Loader2, CheckCircle, FileType, MonitorPlay } from 'lucide-react';
@@ -9,10 +9,32 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [message, setMessage] = useState(null);
+  const [settings, setSettings] = useState({
+    quality_profiles: ['balanced'],
+    transcript_formats: ['txt', 'md', 'pdf'],
+    default_quality_profile: 'balanced',
+  });
+  const [qualityProfile, setQualityProfile] = useState('balanced');
+
+  const transcriptFormats = useMemo(() => settings?.transcript_formats || ['txt', 'md', 'pdf'], [settings]);
 
   const getErrorText = (err, fallback) => {
     return err?.response?.data?.detail || fallback;
   };
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await axios.get('/api/settings');
+        setSettings(res.data);
+        setQualityProfile(res.data.default_quality_profile || 'balanced');
+      } catch {
+        // Keep default settings in offline/dev fallback mode.
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   const fetchInfo = async () => {
     if (!url) return;
@@ -33,8 +55,8 @@ function App() {
     if (!url) return;
     setDownloading(true);
     try {
-      await axios.post('/api/download', { url });
-      setMessage({ type: 'success', text: 'Video downloaded successfully to your Downloads folder.' });
+      await axios.post('/api/download', { url, quality_profile: qualityProfile });
+      setMessage({ type: 'success', text: `Video downloaded (${qualityProfile}) to your Downloads folder.` });
     } catch (err) {
       setMessage({ type: 'error', text: getErrorText(err, 'Failed to download video.') });
     } finally {
@@ -122,10 +144,26 @@ function App() {
 
                 <div className="p-8 flex flex-col justify-center">
                   <h2 className="text-2xl font-bold mb-2 line-clamp-2">{videoInfo.title}</h2>
-                  <p className="text-gray-400 mb-6 flex items-center gap-2">
+                  <p className="text-gray-400 mb-2 flex items-center gap-2">
                     <span className="px-2 py-1 bg-gray-700 rounded text-xs font-mono">HD</span>
                     <span>Video ID: {videoInfo.id}</span>
                   </p>
+
+                  <label className="block text-sm text-gray-300 mb-6">
+                    <span className="mr-2">Quality profile:</span>
+                    <select
+                      className="bg-gray-900 border border-gray-600 rounded-md px-3 py-1.5 text-gray-100"
+                      value={qualityProfile}
+                      onChange={(e) => setQualityProfile(e.target.value)}
+                      disabled={downloading}
+                    >
+                      {settings.quality_profiles.map((profile) => (
+                        <option key={profile} value={profile}>
+                          {profile}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
 
                   <div className="space-y-4">
                     <button
@@ -138,7 +176,7 @@ function App() {
                     </button>
 
                     <div className="grid grid-cols-3 gap-2">
-                      {['txt', 'md', 'pdf'].map((fmt) => (
+                      {transcriptFormats.map((fmt) => (
                         <button
                           key={fmt}
                           onClick={() => handleDownloadTranscript(fmt)}
