@@ -13,13 +13,30 @@ function App() {
     quality_profiles: ['balanced'],
     transcript_formats: ['txt', 'md', 'pdf'],
     default_quality_profile: 'balanced',
+    default_transcript_format: 'txt',
   });
   const [qualityProfile, setQualityProfile] = useState('balanced');
+  const [defaultTranscriptFormat, setDefaultTranscriptFormat] = useState('txt');
+  const [savingPrefs, setSavingPrefs] = useState(false);
 
   const transcriptFormats = useMemo(() => settings?.transcript_formats || ['txt', 'md', 'pdf'], [settings]);
 
   const getErrorText = (err, fallback) => {
     return err?.response?.data?.detail || fallback;
+  };
+
+  const persistPreferences = async (nextQuality, nextFormat) => {
+    setSavingPrefs(true);
+    try {
+      await axios.post('/api/preferences', {
+        quality_profile: nextQuality,
+        transcript_format: nextFormat,
+      });
+    } catch {
+      // Don't block UX if settings persistence fails.
+    } finally {
+      setSavingPrefs(false);
+    }
   };
 
   useEffect(() => {
@@ -28,6 +45,7 @@ function App() {
         const res = await axios.get('/api/settings');
         setSettings(res.data);
         setQualityProfile(res.data.default_quality_profile || 'balanced');
+        setDefaultTranscriptFormat(res.data.default_transcript_format || 'txt');
       } catch {
         // Keep default settings in offline/dev fallback mode.
       }
@@ -80,6 +98,16 @@ function App() {
     } finally {
       setDownloading(false);
     }
+  };
+
+  const handleQualityChange = async (value) => {
+    setQualityProfile(value);
+    await persistPreferences(value, defaultTranscriptFormat);
+  };
+
+  const handleDefaultTranscriptChange = async (value) => {
+    setDefaultTranscriptFormat(value);
+    await persistPreferences(qualityProfile, value);
   };
 
   return (
@@ -149,12 +177,12 @@ function App() {
                     <span>Video ID: {videoInfo.id}</span>
                   </p>
 
-                  <label className="block text-sm text-gray-300 mb-6">
+                  <label className="block text-sm text-gray-300 mb-3">
                     <span className="mr-2">Quality profile:</span>
                     <select
                       className="bg-gray-900 border border-gray-600 rounded-md px-3 py-1.5 text-gray-100"
                       value={qualityProfile}
-                      onChange={(e) => setQualityProfile(e.target.value)}
+                      onChange={(e) => handleQualityChange(e.target.value)}
                       disabled={downloading}
                     >
                       {settings.quality_profiles.map((profile) => (
@@ -165,6 +193,23 @@ function App() {
                     </select>
                   </label>
 
+                  <label className="block text-sm text-gray-300 mb-6">
+                    <span className="mr-2">Default transcript:</span>
+                    <select
+                      className="bg-gray-900 border border-gray-600 rounded-md px-3 py-1.5 text-gray-100"
+                      value={defaultTranscriptFormat}
+                      onChange={(e) => handleDefaultTranscriptChange(e.target.value)}
+                      disabled={downloading}
+                    >
+                      {transcriptFormats.map((fmt) => (
+                        <option key={fmt} value={fmt}>
+                          {fmt.toUpperCase()}
+                        </option>
+                      ))}
+                    </select>
+                    {savingPrefs && <span className="ml-2 text-xs text-gray-400">Saving…</span>}
+                  </label>
+
                   <div className="space-y-4">
                     <button
                       onClick={handleDownloadVideo}
@@ -173,6 +218,14 @@ function App() {
                     >
                       {downloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
                       Download Video (MP4)
+                    </button>
+
+                    <button
+                      onClick={() => handleDownloadTranscript(defaultTranscriptFormat)}
+                      disabled={downloading}
+                      className="w-full bg-indigo-500 text-white hover:bg-indigo-400 px-6 py-3 rounded-xl font-semibold transition-all disabled:opacity-50"
+                    >
+                      Download Default Transcript ({defaultTranscriptFormat.toUpperCase()})
                     </button>
 
                     <div className="grid grid-cols-3 gap-2">

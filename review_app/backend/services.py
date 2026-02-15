@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import textwrap
@@ -13,11 +14,22 @@ DOWNLOAD_DIR = os.environ.get(
 )
 Path(DOWNLOAD_DIR).mkdir(parents=True, exist_ok=True)
 
+PREFERENCES_PATH = Path(
+    os.environ.get(
+        "YT_DOWNLOADER_PREFS_PATH",
+        str(Path.home() / ".config" / "yt_downloader" / "preferences.json"),
+    )
+)
+
 ALLOWED_TRANSCRIPT_FORMATS = {"txt", "md", "pdf"}
 QUALITY_PROFILES = {
     "best": "bestvideo*+bestaudio/best",
     "balanced": "best[ext=mp4]/best",
     "small": "worst[ext=mp4]/worst",
+}
+DEFAULT_PREFERENCES = {
+    "quality_profile": "balanced",
+    "transcript_format": "txt",
 }
 
 
@@ -40,6 +52,44 @@ def _resolve_quality_profile(profile: str) -> str:
             f"Unsupported quality profile '{profile}'. "
             f"Use one of: {sorted(QUALITY_PROFILES.keys())}"
         )
+    return normalized
+
+
+def _resolve_transcript_format(fmt: str) -> str:
+    normalized = (fmt or "txt").lower().strip()
+    if normalized not in ALLOWED_TRANSCRIPT_FORMATS:
+        raise ValueError(
+            f"Unsupported format '{fmt}'. Use one of: {sorted(ALLOWED_TRANSCRIPT_FORMATS)}"
+        )
+    return normalized
+
+
+def _normalize_preferences(data: dict) -> dict:
+    quality_profile = _resolve_quality_profile(data.get("quality_profile", DEFAULT_PREFERENCES["quality_profile"]))
+    transcript_format = _resolve_transcript_format(data.get("transcript_format", DEFAULT_PREFERENCES["transcript_format"]))
+    return {
+        "quality_profile": quality_profile,
+        "transcript_format": transcript_format,
+    }
+
+
+def load_preferences() -> dict:
+    if not PREFERENCES_PATH.exists():
+        return DEFAULT_PREFERENCES.copy()
+
+    try:
+        raw = json.loads(PREFERENCES_PATH.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            return DEFAULT_PREFERENCES.copy()
+        return _normalize_preferences(raw)
+    except Exception:
+        return DEFAULT_PREFERENCES.copy()
+
+
+def save_preferences(preferences: dict) -> dict:
+    normalized = _normalize_preferences(preferences)
+    PREFERENCES_PATH.parent.mkdir(parents=True, exist_ok=True)
+    PREFERENCES_PATH.write_text(json.dumps(normalized, indent=2), encoding="utf-8")
     return normalized
 
 
@@ -98,9 +148,7 @@ def get_transcript_text(video_id: str):
 
 
 def save_transcript(video_id: str, title: str, fmt: str, url: str):
-    fmt = (fmt or "").lower().strip()
-    if fmt not in ALLOWED_TRANSCRIPT_FORMATS:
-        raise ValueError(f"Unsupported format '{fmt}'. Use one of: {sorted(ALLOWED_TRANSCRIPT_FORMATS)}")
+    fmt = _resolve_transcript_format(fmt)
 
     text = get_transcript_text(video_id)
     safe_title = _safe_filename(title)

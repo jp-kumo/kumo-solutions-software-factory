@@ -16,10 +16,12 @@ from backend.services import (
     QUALITY_PROFILES,
     download_video,
     get_video_info,
+    load_preferences,
+    save_preferences,
     save_transcript,
 )
 
-app = FastAPI(title="YT Downloader API", version="1.1.0")
+app = FastAPI(title="YT Downloader API", version="1.2.0")
 
 # Development-friendly CORS. Tighten in production if exposed remotely.
 app.add_middleware(
@@ -47,6 +49,11 @@ class TranscriptRequest(BaseModel):
     fmt: str
 
 
+class PreferencesRequest(BaseModel):
+    quality_profile: str
+    transcript_format: str
+
+
 def _handle_service_error(exc: Exception) -> None:
     """Convert service-layer exceptions into API-friendly HTTP errors."""
     if isinstance(exc, ValueError):
@@ -66,11 +73,26 @@ def health():
 
 @app.get("/api/settings")
 def settings():
+    prefs = load_preferences()
     return {
         "quality_profiles": sorted(QUALITY_PROFILES.keys()),
         "transcript_formats": sorted(ALLOWED_TRANSCRIPT_FORMATS),
-        "default_quality_profile": "balanced",
+        "default_quality_profile": prefs["quality_profile"],
+        "default_transcript_format": prefs["transcript_format"],
     }
+
+
+@app.get("/api/preferences")
+def preferences_get():
+    return load_preferences()
+
+
+@app.post("/api/preferences")
+def preferences_post(payload: PreferencesRequest):
+    try:
+        return save_preferences(payload.model_dump())
+    except Exception as exc:
+        _handle_service_error(exc)
 
 
 @app.get("/api/info")

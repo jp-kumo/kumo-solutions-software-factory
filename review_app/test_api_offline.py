@@ -95,6 +95,35 @@ class ApiOfflineTests(unittest.TestCase):
         self.assertEqual(response.status_code, 502)
         self.assertIn("Error fetching transcript", response.json()["detail"])
 
+    @patch("backend.main.load_preferences")
+    def test_get_preferences(self, mock_load_preferences):
+        mock_load_preferences.return_value = {
+            "quality_profile": "best",
+            "transcript_format": "md",
+        }
+
+        response = self.client.get("/api/preferences")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["quality_profile"], "best")
+        self.assertEqual(response.json()["transcript_format"], "md")
+
+    @patch("backend.main.save_preferences")
+    def test_post_preferences(self, mock_save_preferences):
+        mock_save_preferences.return_value = {
+            "quality_profile": "small",
+            "transcript_format": "pdf",
+        }
+
+        response = self.client.post(
+            "/api/preferences",
+            json={"quality_profile": "small", "transcript_format": "pdf"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["quality_profile"], "small")
+        self.assertEqual(response.json()["transcript_format"], "pdf")
+
 
 if __name__ == "__main__":
     unittest.main()
