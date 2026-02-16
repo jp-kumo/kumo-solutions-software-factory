@@ -4,6 +4,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from backend.main import app
+from backend.services import extract_video_id
 
 
 class ApiOfflineTests(unittest.TestCase):
@@ -123,6 +124,44 @@ class ApiOfflineTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["quality_profile"], "small")
         self.assertEqual(response.json()["transcript_format"], "pdf")
+
+    @patch("backend.main.save_transcript")
+    def test_transcript_post_without_video_id(self, mock_save_transcript):
+        mock_save_transcript.return_value = {
+            "status": "success",
+            "file": "/tmp/sample.txt",
+        }
+
+        response = self.client.post(
+            "/api/transcript",
+            json={
+                "url": "https://www.youtube.com/watch?v=abc123",
+                "title": "Sample Title",
+                "fmt": "txt",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        mock_save_transcript.assert_called_once_with(
+            None,
+            "Sample Title",
+            "txt",
+            "https://www.youtube.com/watch?v=abc123",
+        )
+
+
+class ServiceHelperTests(unittest.TestCase):
+    def test_extract_video_id_variants(self):
+        cases = {
+            "https://www.youtube.com/watch?v=abc123XYZ": "abc123XYZ",
+            "https://youtu.be/abc123XYZ": "abc123XYZ",
+            "https://www.youtube.com/shorts/abc123XYZ": "abc123XYZ",
+            "https://www.youtube.com/embed/abc123XYZ": "abc123XYZ",
+        }
+
+        for url, expected in cases.items():
+            with self.subTest(url=url):
+                self.assertEqual(extract_video_id(url), expected)
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ import re
 import textwrap
 from pathlib import Path
 from typing import Optional
+from urllib.parse import parse_qs, urlparse
 
 import yt_dlp
 from fpdf import FPDF
@@ -36,6 +37,30 @@ DEFAULT_PREFERENCES = {
 def _safe_filename(name: str) -> str:
     cleaned = re.sub(r"[^a-zA-Z0-9 _.-]", "", name).strip()
     return cleaned or "video"
+
+
+def extract_video_id(url: str) -> Optional[str]:
+    """Extract a YouTube video ID from common URL variants."""
+    if not url:
+        return None
+
+    parsed = urlparse(url)
+    host = (parsed.netloc or "").lower()
+
+    if "youtu.be" in host:
+        candidate = parsed.path.strip("/").split("/")[0]
+        return candidate or None
+
+    if "youtube.com" in host or "youtube-nocookie.com" in host:
+        if parsed.path == "/watch":
+            return parse_qs(parsed.query).get("v", [None])[0]
+
+        if parsed.path.startswith("/shorts/") or parsed.path.startswith("/embed/"):
+            parts = [part for part in parsed.path.split("/") if part]
+            if len(parts) >= 2:
+                return parts[1]
+
+    return None
 
 
 def _ffmpeg_location_if_local() -> Optional[str]:
@@ -147,10 +172,17 @@ def get_transcript_text(video_id: str):
     return " ".join(item["text"] for item in transcript_list)
 
 
-def save_transcript(video_id: str, title: str, fmt: str, url: str):
+def save_transcript(video_id: Optional[str], title: str, fmt: str, url: str):
     fmt = _resolve_transcript_format(fmt)
 
-    text = get_transcript_text(video_id)
+    resolved_video_id = video_id or extract_video_id(url)
+    if not resolved_video_id:
+        raise ValueError(
+            "Missing video_id and could not extract it from URL. "
+            "Use a full YouTube URL or provide video_id explicitly."
+        )
+
+    text = get_transcript_text(resolved_video_id)
     safe_title = _safe_filename(title)
     filepath = Path(DOWNLOAD_DIR) / f"{safe_title}_transcript.{fmt}"
 

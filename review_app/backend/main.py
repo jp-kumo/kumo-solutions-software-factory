@@ -44,7 +44,7 @@ class DownloadRequest(BaseModel):
 
 class TranscriptRequest(BaseModel):
     url: HttpUrl
-    video_id: str
+    video_id: str | None = None
     title: str
     fmt: str
 
@@ -130,7 +130,7 @@ def download_post(payload: DownloadRequest):
 
 
 @app.get("/api/transcript")
-def transcript(url: str, video_id: str, title: str, fmt: str):
+def transcript(url: str, title: str, fmt: str, video_id: str | None = None):
     # Backward-compatible GET endpoint
     try:
         return save_transcript(video_id, title, fmt, url)

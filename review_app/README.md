@@ -60,7 +60,7 @@ Then open: `http://localhost:8000`
   ```json
   {
     "url": "https://...",
-    "video_id": "abc123",
+    "video_id": "abc123", // optional if URL includes YouTube ID
     "title": "Video title",
     "fmt": "txt"
   }
