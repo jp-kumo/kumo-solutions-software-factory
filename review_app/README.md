@@ -8,6 +8,7 @@ A desktop/web hybrid app to fetch YouTube metadata, download MP4 files, and expo
 - Added request models + `POST` endpoints (`/api/info`, `/api/download`, `/api/transcript`) while keeping old `GET` routes for compatibility.
 - Added backend health endpoint: `GET /api/health`.
 - Improved transcript format validation and filename sanitization.
+- Added stricter YouTube video ID validation (11-character IDs) with support for `watch`, `youtu.be`, `shorts`, `embed`, and `live` URL patterns.
 - Added persisted user preferences (`quality_profile`, `transcript_format`) with new API endpoints.
 - Updated frontend to call `POST` APIs, load backend settings dynamically, support quality-profile selection, and one-click download using default transcript format.
 - Added `.gitignore` to avoid committing heavy/local artifacts (`venv`, zips, build outputs).

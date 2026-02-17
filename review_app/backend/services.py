@@ -23,6 +23,7 @@ PREFERENCES_PATH = Path(
 )
 
 ALLOWED_TRANSCRIPT_FORMATS = {"txt", "md", "pdf"}
+VIDEO_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{11}$")
 QUALITY_PROFILES = {
     "best": "bestvideo*+bestaudio/best",
     "balanced": "best[ext=mp4]/best",
@@ -39,6 +40,16 @@ def _safe_filename(name: str) -> str:
     return cleaned or "video"
 
 
+def _normalize_video_id(candidate: Optional[str]) -> Optional[str]:
+    if not candidate:
+        return None
+
+    trimmed = candidate.strip()
+    if VIDEO_ID_PATTERN.match(trimmed):
+        return trimmed
+    return None
+
+
 def extract_video_id(url: str) -> Optional[str]:
     """Extract a YouTube video ID from common URL variants."""
     if not url:
@@ -49,16 +60,21 @@ def extract_video_id(url: str) -> Optional[str]:
 
     if "youtu.be" in host:
         candidate = parsed.path.strip("/").split("/")[0]
-        return candidate or None
+        return _normalize_video_id(candidate)
 
     if "youtube.com" in host or "youtube-nocookie.com" in host:
         if parsed.path == "/watch":
-            return parse_qs(parsed.query).get("v", [None])[0]
+            candidate = parse_qs(parsed.query).get("v", [None])[0]
+            return _normalize_video_id(candidate)
 
-        if parsed.path.startswith("/shorts/") or parsed.path.startswith("/embed/"):
+        if (
+            parsed.path.startswith("/shorts/")
+            or parsed.path.startswith("/embed/")
+            or parsed.path.startswith("/live/")
+        ):
             parts = [part for part in parsed.path.split("/") if part]
             if len(parts) >= 2:
-                return parts[1]
+                return _normalize_video_id(parts[1])
 
     return None
 
@@ -175,10 +191,15 @@ def get_transcript_text(video_id: str):
 def save_transcript(video_id: Optional[str], title: str, fmt: str, url: str):
     fmt = _resolve_transcript_format(fmt)
 
-    resolved_video_id = video_id or extract_video_id(url)
+    resolved_video_id = _normalize_video_id(video_id) if video_id else extract_video_id(url)
+    if video_id and not resolved_video_id:
+        raise ValueError(
+            "Invalid video_id. Expected 11 characters using letters, numbers, '-' or '_'."
+        )
+
     if not resolved_video_id:
         raise ValueError(
-            "Missing video_id and could not extract it from URL. "
+            "Missing video_id and could not extract a valid 11-character ID from URL. "
             "Use a full YouTube URL or provide video_id explicitly."
         )
 

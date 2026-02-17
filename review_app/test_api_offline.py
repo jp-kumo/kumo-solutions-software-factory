@@ -153,15 +153,28 @@ class ApiOfflineTests(unittest.TestCase):
 class ServiceHelperTests(unittest.TestCase):
     def test_extract_video_id_variants(self):
         cases = {
-            "https://www.youtube.com/watch?v=abc123XYZ": "abc123XYZ",
-            "https://youtu.be/abc123XYZ": "abc123XYZ",
-            "https://www.youtube.com/shorts/abc123XYZ": "abc123XYZ",
-            "https://www.youtube.com/embed/abc123XYZ": "abc123XYZ",
+            "https://www.youtube.com/watch?v=abc123XYZ_0": "abc123XYZ_0",
+            "https://youtu.be/abc123XYZ_0": "abc123XYZ_0",
+            "https://www.youtube.com/shorts/abc123XYZ_0": "abc123XYZ_0",
+            "https://www.youtube.com/embed/abc123XYZ_0": "abc123XYZ_0",
+            "https://www.youtube.com/live/abc123XYZ_0": "abc123XYZ_0",
         }
 
         for url, expected in cases.items():
             with self.subTest(url=url):
                 self.assertEqual(extract_video_id(url), expected)
+
+    def test_extract_video_id_rejects_invalid_ids(self):
+        invalid_cases = [
+            "https://www.youtube.com/watch?v=short",
+            "https://youtu.be/toolongvideoid123",
+            "https://www.youtube.com/watch?v=abc123XYZ!0",
+            "https://example.com/watch?v=abc123XYZ_0",
+        ]
+
+        for url in invalid_cases:
+            with self.subTest(url=url):
+                self.assertIsNone(extract_video_id(url))
 
 
 if __name__ == "__main__":
