@@ -50,19 +50,23 @@ def _normalize_video_id(candidate: Optional[str]) -> Optional[str]:
     return None
 
 
+def _is_allowed_host(host: str, root: str) -> bool:
+    return host == root or host.endswith(f".{root}")
+
+
 def extract_video_id(url: str) -> Optional[str]:
     """Extract a YouTube video ID from common URL variants."""
     if not url:
         return None
 
     parsed = urlparse(url)
-    host = (parsed.netloc or "").lower()
+    host = (parsed.hostname or "").lower()
 
-    if "youtu.be" in host:
+    if _is_allowed_host(host, "youtu.be"):
         candidate = parsed.path.strip("/").split("/")[0]
         return _normalize_video_id(candidate)
 
-    if "youtube.com" in host or "youtube-nocookie.com" in host:
+    if _is_allowed_host(host, "youtube.com") or _is_allowed_host(host, "youtube-nocookie.com"):
         if parsed.path == "/watch":
             candidate = parse_qs(parsed.query).get("v", [None])[0]
             return _normalize_video_id(candidate)

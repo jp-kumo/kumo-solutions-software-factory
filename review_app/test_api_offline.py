@@ -170,6 +170,9 @@ class ServiceHelperTests(unittest.TestCase):
             "https://youtu.be/toolongvideoid123",
             "https://www.youtube.com/watch?v=abc123XYZ!0",
             "https://example.com/watch?v=abc123XYZ_0",
+            "https://notyoutube.com/watch?v=abc123XYZ_0",
+            "https://youtube.com.evil.test/watch?v=abc123XYZ_0",
+            "https://youtu.be.evil.test/abc123XYZ_0",
         ]
 
         for url in invalid_cases:
