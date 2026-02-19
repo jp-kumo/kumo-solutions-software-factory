@@ -6,9 +6,6 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qs, urlparse
 
-import yt_dlp
-from fpdf import FPDF
-from youtube_transcript_api import YouTubeTranscriptApi
 
 DOWNLOAD_DIR = os.environ.get(
     "DOWNLOAD_DIR", str(Path.home() / "Downloads" / "YT_Downloader")
@@ -33,6 +30,30 @@ DEFAULT_PREFERENCES = {
     "quality_profile": "balanced",
     "transcript_format": "txt",
 }
+
+
+def _require_yt_dlp():
+    try:
+        import yt_dlp  # type: ignore
+    except Exception as exc:
+        raise RuntimeError("yt-dlp is not installed. Install backend dependencies.") from exc
+    return yt_dlp
+
+
+def _require_transcript_api():
+    try:
+        from youtube_transcript_api import YouTubeTranscriptApi  # type: ignore
+    except Exception as exc:
+        raise RuntimeError("youtube-transcript-api is not installed. Install backend dependencies.") from exc
+    return YouTubeTranscriptApi
+
+
+def _require_fpdf():
+    try:
+        from fpdf import FPDF  # type: ignore
+    except Exception as exc:
+        raise RuntimeError("fpdf2 is not installed. Install backend dependencies.") from exc
+    return FPDF
 
 
 def _safe_filename(name: str) -> str:
@@ -140,6 +161,7 @@ def save_preferences(preferences: dict) -> dict:
 
 def get_video_info(url: str):
     ydl_opts = {"quiet": True, "noplaylist": True}
+    yt_dlp = _require_yt_dlp()
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
         return {
@@ -164,6 +186,7 @@ def download_video(url: str, quality_profile: str = "balanced"):
     if ffmpeg_location:
         ydl_opts["ffmpeg_location"] = ffmpeg_location
 
+    yt_dlp = _require_yt_dlp()
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
 
@@ -173,9 +196,11 @@ def download_video(url: str, quality_profile: str = "balanced"):
 def get_transcript_text(video_id: str):
     try:
         # Primary path
+        YouTubeTranscriptApi = _require_transcript_api()
         transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
     except AttributeError:
         # Compatibility path with instantiated API
+        YouTubeTranscriptApi = _require_transcript_api()
         api = YouTubeTranscriptApi()
         transcript_objects = api.fetch(video_id)
         transcript_list = []
@@ -221,6 +246,8 @@ def save_transcript(video_id: Optional[str], title: str, fmt: str, url: str):
         filepath.write_text(final_content, encoding="utf-8")
 
     elif fmt == "pdf":
+
+        FPDF = _require_fpdf()
 
         class PDF(FPDF):
             def footer(self):
