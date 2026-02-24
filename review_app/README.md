@@ -85,6 +85,11 @@ The tests mock service calls and verify:
 - `400` mapping for invalid transcript format
 - `502` mapping for upstream transcript/provider failures
 
+Additional service-level unit tests (no network) are in `tests_services_unit.py` and cover:
+- preference defaults/fallback behavior on missing or malformed preference files
+- normalization + persistence of saved preferences
+- validation guards for quality profiles, transcript formats, and video IDs
+
 Nightly/local check helper (from workspace root):
 ```bash
 ./scripts/review_app_nightly_check.sh
