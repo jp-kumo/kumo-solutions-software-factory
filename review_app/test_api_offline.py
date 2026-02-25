@@ -158,6 +158,9 @@ class ServiceHelperTests(unittest.TestCase):
             "https://www.youtube.com/shorts/abc123XYZ_0": "abc123XYZ_0",
             "https://www.youtube.com/embed/abc123XYZ_0": "abc123XYZ_0",
             "https://www.youtube.com/live/abc123XYZ_0": "abc123XYZ_0",
+            "https://www.youtube.com/attribution_link?u=%2Fwatch%3Fv%3Dabc123XYZ_0%26feature%3Dshare": "abc123XYZ_0",
+            "www.youtube.com/watch?v=abc123XYZ_0": "abc123XYZ_0",
+            "abc123XYZ_0": "abc123XYZ_0",
         }
 
         for url, expected in cases.items():

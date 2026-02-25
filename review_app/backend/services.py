@@ -4,7 +4,7 @@ import re
 import textwrap
 from pathlib import Path
 from typing import Optional
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 
 DOWNLOAD_DIR = os.environ.get(
@@ -80,7 +80,28 @@ def extract_video_id(url: str) -> Optional[str]:
     if not url:
         return None
 
-    parsed = urlparse(url)
+    trimmed = url.strip()
+
+    # Allow direct 11-character IDs (useful for copy/paste and tests).
+    direct_id = _normalize_video_id(trimmed)
+    if direct_id:
+        return direct_id
+
+    if "://" not in trimmed and trimmed.startswith(
+        (
+            "youtube.com",
+            "www.youtube.com",
+            "m.youtube.com",
+            "music.youtube.com",
+            "youtu.be",
+            "www.youtu.be",
+            "youtube-nocookie.com",
+            "www.youtube-nocookie.com",
+        )
+    ):
+        trimmed = f"https://{trimmed}"
+
+    parsed = urlparse(trimmed)
     host = (parsed.hostname or "").lower()
 
     if _is_allowed_host(host, "youtu.be"):
@@ -91,6 +112,14 @@ def extract_video_id(url: str) -> Optional[str]:
         if parsed.path == "/watch":
             candidate = parse_qs(parsed.query).get("v", [None])[0]
             return _normalize_video_id(candidate)
+
+        if parsed.path == "/attribution_link":
+            nested = parse_qs(parsed.query).get("u", [None])[0]
+            if nested:
+                nested_parsed = urlparse(unquote(nested))
+                if nested_parsed.path == "/watch":
+                    candidate = parse_qs(nested_parsed.query).get("v", [None])[0]
+                    return _normalize_video_id(candidate)
 
         if (
             parsed.path.startswith("/shorts/")
@@ -232,7 +261,11 @@ def save_transcript(video_id: Optional[str], title: str, fmt: str, url: str):
             "Use a full YouTube URL or provide video_id explicitly."
         )
 
-    text = get_transcript_text(resolved_video_id)
+    try:
+        text = get_transcript_text(resolved_video_id)
+    except Exception as exc:
+        raise RuntimeError(f"Could not retrieve transcript for {resolved_video_id}. It might be disabled or unavailable.") from exc
+
     safe_title = _safe_filename(title)
     filepath = Path(DOWNLOAD_DIR) / f"{safe_title}_transcript.{fmt}"
 
