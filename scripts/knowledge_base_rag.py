@@ -341,12 +341,15 @@ def extract_text(path: str) -> Tuple[str, str]:
     return p.name, p.read_text(encoding="utf-8", errors="ignore")
 
 
-def validate_content(source_type: str, content: str, cfg: Dict[str, Any]) -> Tuple[bool, str, str]:
+def validate_content(source_type: str, content: str, cfg: Dict[str, Any], strict: bool = True) -> Tuple[bool, str, str]:
     content = (content or "").strip()
     if len(content) < int(cfg["min_chars"]):
         return False, "too_short", content
 
     content = content[: int(cfg["max_content_chars"])]
+
+    if not strict:
+        return True, "ok", content
 
     lower = content.lower()
     err_hits = sum(1 for s in ERROR_SIGNALS if s in lower)
@@ -507,7 +510,7 @@ def upsert_source(conn: sqlite3.Connection, src: Extracted, raw_url: str, tags: 
     return int(cur.lastrowid), True
 
 
-def ingest(input_value: str, tags: List[str], cfg: Dict[str, Any]) -> Dict[str, Any]:
+def ingest(input_value: str, tags: List[str], cfg: Dict[str, Any], force: bool = False) -> Dict[str, Any]:
     st = detect_source_type(input_value)
     raw_url = input_value
 
@@ -530,7 +533,7 @@ def ingest(input_value: str, tags: List[str], cfg: Dict[str, Any]) -> Dict[str, 
         canonical = str(Path(input_value).resolve())
         st = "text"
 
-    ok, reason, content = validate_content(st, content, cfg)
+    ok, reason, content = validate_content(st, content, cfg, strict=not force)
     if not ok:
         return {"ok": False, "reason": reason, "source_type": st}
 
@@ -678,6 +681,7 @@ def main() -> int:
     p_ing = sub.add_parser("ingest")
     p_ing.add_argument("input", help="URL or file path")
     p_ing.add_argument("--tags", default="", help="comma separated tags")
+    p_ing.add_argument("--force", action="store_true", help="bypass strict quality/error-page validators for trusted inputs")
 
     p_q = sub.add_parser("query")
     p_q.add_argument("question")
@@ -695,7 +699,7 @@ def main() -> int:
     if args.cmd == "ingest":
         tags = [t.strip() for t in str(args.tags).split(",") if t.strip()]
         with ingestion_lock():
-            result = ingest(args.input, tags, cfg)
+            result = ingest(args.input, tags, cfg, force=bool(args.force))
         print(json.dumps(result, indent=2))
         return 0 if result.get("ok") else 1
 

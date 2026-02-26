@@ -58,6 +58,11 @@ Ingest URL:
 python3 scripts/knowledge_base_rag.py ingest "https://example.com/article" --tags "ai,cloud"
 ```
 
+For trusted but transcript-like/noisy files that fail strict validators, use:
+```bash
+python3 scripts/knowledge_base_rag.py ingest "/path/to/file.md" --tags "telegram-upload" --force
+```
+
 Ingest file:
 ```bash
 python3 scripts/knowledge_base_rag.py ingest "/path/to/file.pdf" --tags "paper"
