@@ -98,9 +98,17 @@ python3 scripts/personal_crm_intelligence.py --run
 
 ---
 
-## Next step to go fully live
-Populate either:
-- `email_json_path` + `calendar_json_path`, or
-- `email_command` + `calendar_command`
+## Live ingestion wiring (implemented)
+Configured commands in `configs/personal_crm_learning.json`:
+- `email_command`: `python3 /home/jpadmin/.openclaw/workspace/scripts/crm_fetch_gmail.py`
+- `calendar_command`: `python3 /home/jpadmin/.openclaw/workspace/scripts/crm_fetch_calendar.py`
 
-with your chosen Gmail/Calendar ingestion method.
+Helper scripts added:
+- `scripts/crm_fetch_gmail.py`
+- `scripts/crm_fetch_calendar.py`
+
+### Required env for gog keyring backend
+If gog keyring password is required in non-interactive runs, set:
+- `GOG_KEYRING_PASSWORD`
+
+You can place this in the cron command line or a sourced env file.
