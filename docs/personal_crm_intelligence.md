@@ -45,7 +45,10 @@ This implements your requested personal CRM intelligence pipeline with filtering
 
 ### Learning system
 - `configs/personal_crm_learning.json`
-- Updates `skip_domains` from rejected candidates where appropriate
+- Updates `skip_domains` from rejected candidates only after threshold (`domain_rejection_threshold`, default 3 distinct rejected senders)
+- Supports guardrails:
+  - `allow_emails`
+  - `allow_domains`
 
 ### Deduplication
 - email match first
@@ -59,6 +62,17 @@ This implements your requested personal CRM intelligence pipeline with filtering
 ### Notifications
 - per-run summary emitted to stdout
 - optional `notify_command` hook for external summary delivery
+
+### First-run safety controls
+- `shadow_mode` (default `true`) approves candidates but does not write contacts
+- `max_new_contacts_per_run` anomaly threshold
+- `max_rejections_per_run` anomaly threshold
+- on anomaly, learning updates are not persisted for that run
+
+### Query helpers (SQL views)
+- `v_stale_contacts_30d`
+- `v_cross_signal_contacts`
+- `v_recent_high_score`
 
 ---
 

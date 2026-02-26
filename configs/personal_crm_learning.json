@@ -7,6 +7,8 @@
   ],
   "excluded_contacts": [],
   "skip_domains": [],
+  "allow_emails": [],
+  "allow_domains": [],
   "skip_keywords": [
     "weekly roundup",
     "monthly update",
@@ -35,5 +37,9 @@
   "calendar_json_path": "",
   "email_command": "",
   "calendar_command": "",
-  "notify_command": ""
+  "notify_command": "",
+  "shadow_mode": true,
+  "max_new_contacts_per_run": 50,
+  "max_rejections_per_run": 250,
+  "domain_rejection_threshold": 3
 }

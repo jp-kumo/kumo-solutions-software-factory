@@ -50,6 +50,8 @@ DEFAULT_CFG = {
     "my_domains": ["gmail.com"],
     "excluded_contacts": [],
     "skip_domains": [],
+    "allow_emails": [],
+    "allow_domains": [],
     "skip_keywords": [
         "weekly roundup",
         "monthly update",
@@ -79,6 +81,10 @@ DEFAULT_CFG = {
     "email_command": "",
     "calendar_command": "",
     "notify_command": "",
+    "shadow_mode": True,
+    "max_new_contacts_per_run": 50,
+    "max_rejections_per_run": 250,
+    "domain_rejection_threshold": 3,
 }
 
 ROLE_PREFIXES = ("info@", "team@", "partnerships@", "collabs@", "noreply@")
@@ -99,6 +105,8 @@ class Candidate:
     company: str = ""
     source_email: bool = False
     source_calendar: bool = False
+    inbound_messages: int = 0
+    outbound_messages: int = 0
 
     @property
     def exchanges(self) -> int:
@@ -192,6 +200,22 @@ def init_schema(conn: sqlite3.Connection) -> None:
           issues INTEGER,
           summary_json TEXT
         );
+
+        CREATE VIEW IF NOT EXISTS v_stale_contacts_30d AS
+        SELECT * FROM contacts
+        WHERE last_touch IS NOT NULL
+          AND julianday('now') - julianday(last_touch) >= 30;
+
+        CREATE VIEW IF NOT EXISTS v_cross_signal_contacts AS
+        SELECT * FROM contacts
+        WHERE source_email = 1 AND source_calendar = 1;
+
+        CREATE VIEW IF NOT EXISTS v_recent_high_score AS
+        SELECT * FROM contacts
+        WHERE score >= 80
+          AND last_touch IS NOT NULL
+          AND julianday('now') - julianday(last_touch) <= 30
+        ORDER BY score DESC, last_touch DESC;
         """
     )
     conn.commit()
@@ -215,11 +239,36 @@ def parse_email_addr(raw: str) -> Tuple[str, str]:
     return name.strip(), email
 
 
+def maybe_learn_skip_domain(cfg: Dict[str, Any], conn: sqlite3.Connection, email: str) -> None:
+    e = norm_email(email)
+    if "@" not in e:
+        return
+    dom = e.split("@", 1)[1]
+    threshold = int(cfg.get("domain_rejection_threshold", 3))
+    if threshold <= 1:
+        if dom not in cfg.get("skip_domains", []):
+            cfg.setdefault("skip_domains", []).append(dom)
+        return
+    row = conn.execute(
+        "SELECT COUNT(DISTINCT email) FROM rejections WHERE email LIKE ?",
+        (f"%@{dom}",),
+    ).fetchone()
+    n = int(row[0]) if row and row[0] is not None else 0
+    if n >= threshold and dom not in cfg.get("skip_domains", []):
+        cfg.setdefault("skip_domains", []).append(dom)
+
+
 def hard_filter(c: Candidate, cfg: Dict[str, Any], conn: sqlite3.Connection) -> Optional[str]:
     e = norm_email(c.email)
     if not e or "@" not in e:
         return "invalid_email"
     domain = e.split("@", 1)[1]
+
+    allow_emails = [norm_email(x) for x in cfg.get("allow_emails", [])]
+    allow_domains = [d.lower() for d in cfg.get("allow_domains", [])]
+    if e in allow_emails or domain in allow_domains:
+        return None
+
     if e in [norm_email(x) for x in cfg.get("my_emails", [])]:
         return "own_email"
     if domain in [d.lower() for d in cfg.get("my_domains", [])]:
@@ -257,6 +306,13 @@ def ai_classify(c: Candidate, cfg: Dict[str, Any]) -> Tuple[bool, str, float]:
     if c.exchanges < int(cfg.get("min_exchanges", 1)):
         return False, "low_exchange_count", 0.85
 
+    total_dir = c.inbound_messages + c.outbound_messages
+    if total_dir > 0:
+        reply_ratio = min(c.inbound_messages, c.outbound_messages) / max(total_dir, 1)
+        # Very one-way + low exchanges is usually cold outreach/automation
+        if c.exchanges <= 1 and reply_ratio < 0.2:
+            return False, "one_way_low_engagement", 0.9
+
     # Optional Gemini Flash call
     gemini = os.getenv("GEMINI_API_KEY", "").strip()
     if gemini and requests is not None:
@@ -273,6 +329,7 @@ def ai_classify(c: Candidate, cfg: Dict[str, Any]) -> Tuple[bool, str, float]:
                                     "approve real person with meaningful two-way interaction.\n\n"
                                     f"name={c.name}\nemail={c.email}\nexchanges={c.exchanges}\n"
                                     f"total_messages={c.total_messages}\nthread_count={c.thread_count}\n"
+                                    f"inbound_messages={c.inbound_messages}\noutbound_messages={c.outbound_messages}\n"
                                     f"subjects={c.subjects[:8]}\nsnippets={c.snippets[:8]}"
                                 )
                             }
@@ -463,6 +520,7 @@ def load_command_records(cmd: str) -> List[Dict[str, Any]]:
 
 def build_email_candidates(records: List[Dict[str, Any]], cfg: Dict[str, Any]) -> Dict[str, Candidate]:
     by_email: Dict[str, Candidate] = {}
+    thread_sets: Dict[str, set] = defaultdict(set)
     my_emails = {norm_email(x) for x in cfg.get("my_emails", [])}
 
     for r in records:
@@ -478,6 +536,9 @@ def build_email_candidates(records: List[Dict[str, Any]], cfg: Dict[str, Any]) -
                 participants.extend([x.strip() for x in v.split(",") if x.strip()])
             elif isinstance(v, list):
                 participants.extend([str(x).strip() for x in v if str(x).strip()])
+
+        from_name, from_email = parse_email_addr(str(r.get("from", r.get("sender", ""))))
+        from_is_me = from_email in my_emails
 
         for raw in participants:
             name, email = parse_email_addr(raw)
@@ -499,8 +560,13 @@ def build_email_candidates(records: List[Dict[str, Any]], cfg: Dict[str, Any]) -
             c.total_messages += 1
             c.subjects.append(subject)
             c.snippets.append(snippet)
+            if from_is_me:
+                c.outbound_messages += 1
+            else:
+                c.inbound_messages += 1
             if thread:
-                c.thread_count += 1
+                thread_sets[email].add(thread)
+                c.thread_count = len(thread_sets[email])
             if date and (not c.last_touch or date > c.last_touch):
                 c.last_touch = date
 
@@ -579,6 +645,8 @@ def merge_candidates(a: Dict[str, Candidate], b: Dict[str, Candidate]) -> Dict[s
         x.meetings += c.meetings
         x.source_email = x.source_email or c.source_email
         x.source_calendar = x.source_calendar or c.source_calendar
+        x.inbound_messages += c.inbound_messages
+        x.outbound_messages += c.outbound_messages
         if c.last_touch and (not x.last_touch or c.last_touch > x.last_touch):
             x.last_touch = c.last_touch
         if not x.name and c.name:
@@ -627,6 +695,8 @@ def run_ingest() -> int:
     new_contacts = 0
     merges = 0
     rejected = 0
+    shadow_approved = 0
+    shadow_mode = bool(cfg.get("shadow_mode", True))
 
     for c in candidates.values():
         reason = hard_filter(c, cfg, conn)
@@ -636,10 +706,7 @@ def run_ingest() -> int:
                 (c.name, norm_email(c.email), reason, "hard"),
             )
             rejected += 1
-            if reason == "skip_domain":
-                dom = norm_email(c.email).split("@", 1)[1]
-                if dom and dom not in cfg["skip_domains"]:
-                    cfg["skip_domains"].append(dom)
+            maybe_learn_skip_domain(cfg, conn, c.email)
             continue
 
         ok, ai_reason, _conf = ai_classify(c, cfg)
@@ -649,13 +716,14 @@ def run_ingest() -> int:
                 (c.name, norm_email(c.email), ai_reason, "ai"),
             )
             rejected += 1
-            # Learn domain from AI rejection where sensible
-            dom = norm_email(c.email).split("@", 1)[1]
-            if dom and dom not in cfg["skip_domains"] and "approve" not in ai_reason:
-                cfg["skip_domains"].append(dom)
+            maybe_learn_skip_domain(cfg, conn, c.email)
             continue
 
         score = contact_score(c, cfg)
+        if shadow_mode:
+            shadow_approved += 1
+            continue
+
         contact_id, created = upsert_contact(conn, c, score)
         if created:
             new_contacts += 1
@@ -670,9 +738,18 @@ def run_ingest() -> int:
             c.last_touch or "",
             c.subjects[0] if c.subjects else "",
             c.snippets[0] if c.snippets else "",
-            {"exchanges": c.exchanges, "meetings": c.meetings},
+            {"exchanges": c.exchanges, "meetings": c.meetings, "inbound": c.inbound_messages, "outbound": c.outbound_messages},
         )
         insert_embedding_stub(conn, contact_id, c)
+
+    anomaly = False
+    if not shadow_mode:
+        if new_contacts > int(cfg.get("max_new_contacts_per_run", 50)):
+            issues += 1
+            anomaly = True
+        if rejected > int(cfg.get("max_rejections_per_run", 250)):
+            issues += 1
+            anomaly = True
 
     summary = {
         "run_at": dt.datetime.now(dt.timezone.utc).isoformat(),
@@ -681,6 +758,9 @@ def run_ingest() -> int:
         "merges": merges,
         "rejected": rejected,
         "issues": issues,
+        "shadow_mode": shadow_mode,
+        "shadow_approved": shadow_approved,
+        "anomaly": anomaly,
     }
 
     conn.execute(
@@ -695,7 +775,8 @@ def run_ingest() -> int:
         ),
     )
     conn.commit()
-    save_cfg(cfg)
+    if not anomaly:
+        save_cfg(cfg)
 
     rpt = RPT_DIR / f"personal_crm_run_{dt.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     rpt.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
@@ -703,9 +784,12 @@ def run_ingest() -> int:
     msg = (
         "Personal CRM ingestion complete\n"
         f"- candidates: {summary['candidates']}\n"
+        f"- shadow_mode: {shadow_mode}\n"
+        f"- shadow_approved: {shadow_approved}\n"
         f"- new: {new_contacts}\n"
         f"- merges: {merges}\n"
         f"- rejected: {rejected}\n"
+        f"- anomaly: {anomaly}\n"
         f"- issues: {issues}\n"
         f"- report: {rpt}"
     )
