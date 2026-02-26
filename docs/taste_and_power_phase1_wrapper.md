@@ -14,6 +14,18 @@ Optional marketing outputs (if supported by underlying pipeline CLI):
 ./scripts/run_episode_pipeline.sh --topic "The Salt Tax" --marketing
 ```
 
+Run pipeline and auto-sync episode tracker in one step:
+
+```bash
+./scripts/run_episode_pipeline.sh --topic "The Salt Tax" --sync-tracker
+```
+
+Run pipeline, sync tracker, and generate a markdown status report:
+
+```bash
+./scripts/run_episode_pipeline.sh --topic "The Salt Tax" --sync-tracker --status-report
+```
+
 Dry run (print detected CLI shape + command only):
 
 ```bash
@@ -35,6 +47,7 @@ Dry run (print detected CLI shape + command only):
 - `scripts/run_episode_pipeline.sh`
 - `scripts/run_taste_power_episode.py`
 - `scripts/sync_taste_power_tracker.py`
+- `scripts/generate_taste_power_status_report.py`
 
 ## Tracker sync automation
 
@@ -57,6 +70,14 @@ The sync currently updates matched episode rows (`title` ↔ output folder slug)
 - `edit_status`: `Ready` when final script exists
 - `thumb_status`: `Needs Pass` when visual prompts exist
 - `notes`: latest synced output folder
+
+Generate a snapshot report from the tracker:
+
+```bash
+python3 scripts/generate_taste_power_status_report.py
+```
+
+Output file: `docs/taste-power-status-report.md`
 
 ## Notes
 
