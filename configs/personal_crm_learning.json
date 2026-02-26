@@ -1,0 +1,39 @@
+{
+  "my_emails": [
+    "jacquespayne.9914@gmail.com"
+  ],
+  "my_domains": [
+    "gmail.com"
+  ],
+  "excluded_contacts": [],
+  "skip_domains": [],
+  "skip_keywords": [
+    "weekly roundup",
+    "monthly update",
+    "newsletter",
+    "digest",
+    "feature announcement",
+    "product launch"
+  ],
+  "prefer_titles": [
+    "ceo",
+    "founder",
+    "vp",
+    "head of",
+    "engineer",
+    "partner",
+    "director"
+  ],
+  "min_exchanges": 1,
+  "max_days_between": 60,
+  "max_attendees": 10,
+  "min_duration_minutes": 15,
+  "email_days": 60,
+  "calendar_days": 60,
+  "account": "jacquespayne.9914@gmail.com",
+  "email_json_path": "",
+  "calendar_json_path": "",
+  "email_command": "",
+  "calendar_command": "",
+  "notify_command": ""
+}
