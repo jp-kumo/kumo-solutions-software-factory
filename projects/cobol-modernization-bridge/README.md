@@ -51,27 +51,35 @@ Each line in `customer_master.fwf` is fixed-width:
 
 ## Quick start
 
-### 1) Create env + install
+### 1) Fast path with Makefile
 
 ```bash
 cd /home/jpadmin/.openclaw/workspace/projects/cobol-modernization-bridge
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+make parse
 ```
 
-### 2) Run parser
+### 2) Run tests
 
 ```bash
-python src/parse_fixed_width.py \
-  --input data/raw/customer_master.fwf \
-  --out-json data/processed/customers.json \
-  --out-csv data/processed/customers.csv
+make test
 ```
 
 ### 3) Optional API preview
 
 ```bash
+make api
+```
+
+### Manual path (if preferred)
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python src/parse_fixed_width.py \
+  --input data/raw/customer_master.fwf \
+  --out-json data/processed/customers.json \
+  --out-csv data/processed/customers.csv
 uvicorn src.app:app --reload --port 8088
 ```
 
