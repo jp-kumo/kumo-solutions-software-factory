@@ -1,0 +1,52 @@
+[
+  {
+    "customer_id": "0000001001",
+    "account_type": "CH",
+    "full_name": "JACQUES PAYNE",
+    "status": "A",
+    "balance": 1234.56,
+    "open_date": "2023-01-01",
+    "risk_code": "01",
+    "is_delinquent": false
+  },
+  {
+    "customer_id": "0000001002",
+    "account_type": "SV",
+    "full_name": "MARIA THOMPSON",
+    "status": "A",
+    "balance": 98.45,
+    "open_date": "2021-06-15",
+    "risk_code": "02",
+    "is_delinquent": false
+  },
+  {
+    "customer_id": "0000001003",
+    "account_type": "LN",
+    "full_name": "DERRICK JOHNSON",
+    "status": "D",
+    "balance": 24567.89,
+    "open_date": "2019-03-20",
+    "risk_code": "05",
+    "is_delinquent": true
+  },
+  {
+    "customer_id": "0000001004",
+    "account_type": "CH",
+    "full_name": "ALINA NGUYEN",
+    "status": "C",
+    "balance": 0.0,
+    "open_date": "2018-01-11",
+    "risk_code": "03",
+    "is_delinquent": false
+  },
+  {
+    "customer_id": "0000001005",
+    "account_type": "SV",
+    "full_name": "SAMUEL RIVERA",
+    "status": "A",
+    "balance": 3100.99,
+    "open_date": "2022-12-09",
+    "risk_code": "02",
+    "is_delinquent": false
+  }
+]
