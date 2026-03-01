@@ -1,0 +1,381 @@
+{
+  "ok": true,
+  "skills_seen": [
+    "agent-zero",
+    "consulting-sales-pipeline",
+    "crm-relationship-tracking",
+    "fiverr-offer-engineering",
+    "gemini",
+    "gog",
+    "income-streams-strategy",
+    "market-signal-scanner",
+    "model-usage",
+    "nano-pdf",
+    "obsidian",
+    "openai-image-gen",
+    "openai-whisper",
+    "portfolio-hiring-alignment",
+    "skill-creator",
+    "slack",
+    "sonoscli",
+    "summarize",
+    "trello-project-ops",
+    "video-frames"
+  ],
+  "approved_skills": [
+    "agent-zero",
+    "consulting-sales-pipeline",
+    "crm-relationship-tracking",
+    "fiverr-offer-engineering",
+    "gemini",
+    "gog",
+    "income-streams-strategy",
+    "market-signal-scanner",
+    "model-usage",
+    "nano-pdf",
+    "obsidian",
+    "openai-image-gen",
+    "openai-whisper",
+    "portfolio-hiring-alignment",
+    "skill-creator",
+    "slack",
+    "sonoscli",
+    "summarize",
+    "trello-project-ops",
+    "video-frames"
+  ],
+  "unapproved_skills_seen": [],
+  "file_count": 58,
+  "findings_total": 46,
+  "findings_high": 0,
+  "findings_medium": 1,
+  "integrity_drift": {
+    "added": [],
+    "removed": [],
+    "modified": []
+  },
+  "findings": [
+    {
+      "kind": "network_call",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 17,
+      "snippet": "import urllib.request"
+    },
+    {
+      "kind": "network_call",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 18,
+      "snippet": "import urllib.error"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 34,
+      "snippet": "os.environ.setdefault(k.strip(), v.strip().strip('\"').strip(\"'\"  ))"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 38,
+      "snippet": "BASE_URL = os.environ.get(\"AGENT_ZERO_URL\", \"http://127.0.0.1:50001\").rstrip(\"/\")"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 39,
+      "snippet": "API_KEY  = os.environ.get(\"AGENT_ZERO_API_KEY\", \"\")"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 40,
+      "snippet": "TIMEOUT  = int(os.environ.get(\"AGENT_ZERO_TIMEOUT\", \"300\"))"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 41,
+      "snippet": "LIFETIME = int(os.environ.get(\"AGENT_ZERO_LIFETIME_HOURS\", \"168\"))"
+    },
+    {
+      "kind": "network_call",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 45,
+      "snippet": "_opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_cookiejar))"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 67,
+      "snippet": "\"\"\"GET /csrf_token to establish session and retrieve CSRF token.\"\"\""
+    },
+    {
+      "kind": "network_call",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 69,
+      "snippet": "req = urllib.request.Request(url, method=\"GET\")"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 74,
+      "snippet": "return data.get(\"token\", \"\")"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 76,
+      "snippet": "print(f\"[agentai] Failed to get CSRF token: {e}\", file=sys.stderr)"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 81,
+      "snippet": "\"\"\"POST a message to Agent Zero with CSRF token and return the response dict.\"\"\""
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 82,
+      "snippet": "# Step 1: get CSRF token (also establishes session cookie)"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 95,
+      "snippet": "\"X-CSRF-Token\": csrf_token,"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 97,
+      "snippet": "if API_KEY:"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 98,
+      "snippet": "headers[\"X-API-Key\"] = API_KEY"
+    },
+    {
+      "kind": "network_call",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 100,
+      "snippet": "req = urllib.request.Request(url, data=data, headers=headers, method=\"POST\")"
+    },
+    {
+      "kind": "network_call",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 105,
+      "snippet": "except urllib.error.HTTPError as e:"
+    },
+    {
+      "kind": "network_call",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 109,
+      "snippet": "except urllib.error.URLError as e:"
+    },
+    {
+      "kind": "network_call",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
+      "line": 120,
+      "snippet": "req = urllib.request.Request(f\"{BASE_URL}/\", method=\"GET\")"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/gemini/SKILL.md",
+      "line": 22,
+      "snippet": "- If auth is required, run `gemini` once interactively and follow the login flow."
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/gog/SKILL.md",
+      "line": 13,
+      "snippet": "- `gog auth credentials /path/to/client_secret.json`"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/gog/SKILL.md",
+      "line": 14,
+      "snippet": "- `gog auth add you@gmail.com --services gmail,calendar,drive,contacts,sheets,docs`"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/gog/SKILL.md",
+      "line": 15,
+      "snippet": "- `gog auth list`"
+    },
+    {
+      "kind": "shell_exec",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/model-usage/scripts/model_usage.py",
+      "line": 27,
+      "snippet": "output = subprocess.check_output(cmd, text=True)"
+    },
+    {
+      "kind": "shell_exec",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/model-usage/scripts/model_usage.py",
+      "line": 30,
+      "snippet": "except subprocess.CalledProcessError as exc:"
+    },
+    {
+      "kind": "network_call",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/openai-image-gen/scripts/gen.py",
+      "line": 12,
+      "snippet": "import urllib.error"
+    },
+    {
+      "kind": "network_call",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/openai-image-gen/scripts/gen.py",
+      "line": 13,
+      "snippet": "import urllib.request"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/openai-image-gen/scripts/gen.py",
+      "line": 35,
+      "snippet": "os.environ.get(\"OPENAI_BASE_URL\")"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/openai-image-gen/scripts/gen.py",
+      "line": 36,
+      "snippet": "or os.environ.get(\"OPENAI_API_BASE\")"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/openai-image-gen/scripts/gen.py",
+      "line": 97,
+      "snippet": "def _post_json(url: str, api_key: str, payload: dict, timeout_s: int) -> dict:"
+    },
+    {
+      "kind": "network_call",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/openai-image-gen/scripts/gen.py",
+      "line": 99,
+      "snippet": "req = urllib.request.Request("
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/openai-image-gen/scripts/gen.py",
+      "line": 103,
+      "snippet": "\"Authorization\": f\"Bearer {api_key}\","
+    },
+    {
+      "kind": "network_call",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/openai-image-gen/scripts/gen.py",
+      "line": 109,
+      "snippet": "with urllib.request.urlopen(req, timeout=timeout_s) as resp:"
+    },
+    {
+      "kind": "network_call",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/openai-image-gen/scripts/gen.py",
+      "line": 111,
+      "snippet": "except urllib.error.HTTPError as e:"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/openai-image-gen/scripts/gen.py",
+      "line": 167,
+      "snippet": "api_key = args.api_key or os.environ.get(\"OPENAI_API_KEY\")"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/openai-image-gen/scripts/gen.py",
+      "line": 168,
+      "snippet": "if not api_key:"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/openai-image-gen/scripts/gen.py",
+      "line": 194,
+      "snippet": "data = _post_json(url=url, api_key=api_key, payload=payload, timeout_s=args.timeout)"
+    },
+    {
+      "kind": "eval_obfus",
+      "severity": "medium",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/openai-image-gen/scripts/gen.py",
+      "line": 199,
+      "snippet": "png = base64.b64decode(b64)"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/skill-creator/SKILL.md",
+      "line": 31,
+      "snippet": "**Default assumption: Claude is already very smart.** Only add context Claude doesn't already have. Challenge each piece of information: \"Does Claude really need this explanation?\" and \"Does this paragraph justify its token cost?\""
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/skill-creator/SKILL.md",
+      "line": 79,
+      "snippet": "- **Benefits**: Token efficient, deterministic, may be executed without loading into context"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/skill-creator/references/output-patterns.md",
+      "line": 65,
+      "snippet": "feat(auth): implement JWT-based authentication"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/skill-creator/references/output-patterns.md",
+      "line": 67,
+      "snippet": "Add login endpoint and token validation middleware"
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/slack/SKILL.md",
+      "line": 10,
+      "snippet": "Use `slack` to react, manage pins, send/edit/delete messages, and fetch member info. The tool uses the bot token configured for Clawdbot."
+    },
+    {
+      "kind": "secret_access",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/sonoscli/SKILL.md",
+      "line": 26,
+      "snippet": "- Spotify Web API search is optional and requires `SPOTIFY_CLIENT_ID/SECRET`."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "approved_skills": [
+    "agent-zero",
+    "consulting-sales-pipeline",
+    "crm-relationship-tracking",
+    "fiverr-offer-engineering",
+    "gemini",
+    "gog",
+    "income-streams-strategy",
+    "market-signal-scanner",
+    "model-usage",
+    "nano-pdf",
+    "obsidian",
+    "openai-image-gen",
+    "openai-whisper",
+    "portfolio-hiring-alignment",
+    "skill-creator",
+    "slack",
+    "sonoscli",
+    "summarize",
+    "trello-project-ops",
+    "video-frames"
+  ],
+  "scan_roots": [
+    "/home/jpadmin/.openclaw/workspace/skills"
+  ],
+  "deny_if_unapproved_skill_present": true,
+  "deny_if_high_findings": true
+}
