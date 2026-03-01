@@ -4,6 +4,7 @@ A running list of references we may reuse for project builds, architecture, and 
 
 ## Diagramming & Visual Architecture
 - Excalidraw Docs: https://docs.excalidraw.com/
+- Excalidraw Libraries Browser: https://libraries.excalidraw.com/
 
 ## OpenClaw
 - OpenClaw Docs (local): `/home/jpadmin/.openclaw/workspace/docs`
