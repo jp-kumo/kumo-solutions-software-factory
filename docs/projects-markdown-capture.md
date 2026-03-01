@@ -22,6 +22,16 @@ Total projects: **2**
 - `docs/security-notes.md` — threat assumptions, controls, known risks.
 - `docs/changelog.md` — project-level human-readable changes.
 
+## Compliance checker
+- Script: `scripts/check_project_markdown_compliance.py`
+- Run manually:
+  - `python3 scripts/check_project_markdown_compliance.py`
+- JSON report output:
+  - `data/project_markdown_compliance.json`
+- Exit code:
+  - `0` when all projects compliant
+  - `2` when one or more projects are missing required Markdown files
+
 ## Current Focus Project
 - `projects/secure-health-rag-reference` already contains `README.md` and test scaffolding.
 - Next doc additions recommended:

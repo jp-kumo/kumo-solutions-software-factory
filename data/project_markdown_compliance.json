@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "required_files": [
+    "README.md",
+    "docs/decisions.md",
+    "docs/roadmap.md",
+    "docs/security-notes.md",
+    "docs/changelog.md"
+  ],
+  "project_count": 2,
+  "non_compliant_count": 0,
+  "projects": [
+    {
+      "project": "cobol-modernization-bridge",
+      "md_count": 8,
+      "missing_required": [],
+      "ok": true
+    },
+    {
+      "project": "secure-health-rag-reference",
+      "md_count": 5,
+      "missing_required": [],
+      "ok": true
+    }
+  ]
+}
