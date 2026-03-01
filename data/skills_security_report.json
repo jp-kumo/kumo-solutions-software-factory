@@ -2,6 +2,7 @@
   "ok": true,
   "skills_seen": [
     "agent-zero",
+    "api-design-best-practices",
     "consulting-sales-pipeline",
     "crm-relationship-tracking",
     "fiverr-offer-engineering",
@@ -24,6 +25,7 @@
   ],
   "approved_skills": [
     "agent-zero",
+    "api-design-best-practices",
     "consulting-sales-pipeline",
     "crm-relationship-tracking",
     "fiverr-offer-engineering",
@@ -45,8 +47,8 @@
     "video-frames"
   ],
   "unapproved_skills_seen": [],
-  "file_count": 58,
-  "findings_total": 46,
+  "file_count": 59,
+  "findings_total": 47,
   "findings_high": 0,
   "findings_medium": 1,
   "integrity_drift": {
@@ -201,6 +203,13 @@
       "file": "/home/jpadmin/.openclaw/workspace/skills/agent-zero/agentai.py",
       "line": 120,
       "snippet": "req = urllib.request.Request(f\"{BASE_URL}/\", method=\"GET\")"
+    },
+    {
+      "kind": "network_call",
+      "severity": "info",
+      "file": "/home/jpadmin/.openclaw/workspace/skills/api-design-best-practices/SKILL.md",
+      "line": 503,
+      "snippet": "curl -X POST http://localhost:3000/api/users \\"
     },
     {
       "kind": "secret_access",
