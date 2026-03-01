@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import re
+import shutil
 import sys
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -71,6 +72,31 @@ def list_skill_files(scan_roots: List[str]) -> Tuple[List[Path], List[str]]:
     return sorted(files), sorted(skills_seen)
 
 
+def quarantine_unapproved(scan_roots: List[str], unapproved_skills: List[str], quarantine_dir: Path) -> List[Dict[str, str]]:
+    actions: List[Dict[str, str]] = []
+    if not unapproved_skills:
+        return actions
+
+    quarantine_dir.mkdir(parents=True, exist_ok=True)
+    for r in scan_roots:
+        root = Path(r)
+        if not root.exists():
+            continue
+        for skill in unapproved_skills:
+            src = root / skill
+            if not src.exists() or not src.is_dir():
+                continue
+            dst = quarantine_dir / skill
+            if dst.exists():
+                suffix = 1
+                while (quarantine_dir / f"{skill}-{suffix}").exists():
+                    suffix += 1
+                dst = quarantine_dir / f"{skill}-{suffix}"
+            shutil.move(str(src), str(dst))
+            actions.append({"from": str(src), "to": str(dst)})
+    return actions
+
+
 def scan_file(path: Path) -> List[Finding]:
     out: List[Finding] = []
     try:
@@ -104,6 +130,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description='Scan skills for supply-chain risk and integrity drift')
     ap.add_argument('--baseline', action='store_true', help='Create/refresh integrity baseline')
     ap.add_argument('--verify', action='store_true', help='Verify current files against baseline')
+    ap.add_argument('--quarantine', action='store_true', help='Move unapproved skills to quarantine dir')
     args = ap.parse_args()
 
     if not args.baseline and not args.verify:
@@ -123,6 +150,20 @@ def main() -> int:
     high_findings = [f for f in findings if f.severity == 'high']
 
     unapproved = sorted([s for s in skills_seen if s not in approved])
+
+    quarantine_actions: List[Dict[str, str]] = []
+    quarantine_enabled = bool(cfg.get('quarantine_enabled', False))
+    quarantine_dir = Path(cfg.get('quarantine_dir', str(WORKSPACE / 'skills_quarantine')))
+    if args.quarantine and quarantine_enabled and unapproved:
+        quarantine_actions = quarantine_unapproved(scan_roots, unapproved, quarantine_dir)
+        # Recompute after quarantine move
+        files, skills_seen = list_skill_files(scan_roots)
+        current_hashes = build_baseline(files)
+        findings = []
+        for p in files:
+            findings.extend(scan_file(p))
+        high_findings = [f for f in findings if f.severity == 'high']
+        unapproved = sorted([s for s in skills_seen if s not in approved])
 
     baseline = {}
     drift = {'added': [], 'removed': [], 'modified': []}
@@ -145,6 +186,7 @@ def main() -> int:
         'findings_medium': len([f for f in findings if f.severity == 'medium']),
         'integrity_drift': drift,
         'findings': [asdict(f) for f in findings[:250]],
+        'quarantine_actions': quarantine_actions,
     }
 
     deny_unapproved = bool(cfg.get('deny_if_unapproved_skill_present', True))
@@ -169,6 +211,7 @@ def main() -> int:
         'drift_added': len(drift['added']),
         'drift_removed': len(drift['removed']),
         'drift_modified': len(drift['modified']),
+        'quarantined': len(quarantine_actions),
         'report_path': str(REPORT_PATH),
         'baseline_path': str(BASELINE_PATH),
     }, indent=2))

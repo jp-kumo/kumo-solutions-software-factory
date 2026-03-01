@@ -377,5 +377,6 @@
       "line": 26,
       "snippet": "- Spotify Web API search is optional and requires `SPOTIFY_CLIENT_ID/SECRET`."
     }
-  ]
+  ],
+  "quarantine_actions": []
 }

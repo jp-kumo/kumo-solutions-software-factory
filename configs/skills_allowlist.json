@@ -24,6 +24,8 @@
   "scan_roots": [
     "/home/jpadmin/.openclaw/workspace/skills"
   ],
+  "quarantine_enabled": true,
+  "quarantine_dir": "/home/jpadmin/.openclaw/workspace/skills_quarantine",
   "deny_if_unapproved_skill_present": true,
   "deny_if_high_findings": true
 }

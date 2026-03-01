@@ -19,6 +19,11 @@ Verify current state vs baseline:
 python3 scripts/skills_security_scan.py --verify
 ```
 
+Quarantine any unapproved skills automatically:
+```bash
+python3 scripts/skills_security_scan.py --verify --quarantine
+```
+
 Default action (if no args): verify.
 
 ## Enforcement behavior
@@ -26,6 +31,10 @@ Default action (if no args): verify.
 The scan returns non-zero if either is true:
 - unapproved skills are detected (based on `approved_skills`), or
 - high-severity findings are detected.
+
+Quarantine controls are set in `configs/skills_allowlist.json`:
+- `quarantine_enabled`
+- `quarantine_dir`
 
 ## Suggested daily job
 
