@@ -30,24 +30,24 @@ Kumo Solutions will implement a workflow that converts meeting transcripts/notes
 
 ## 4) Deliverables
 1. Configured pilot workflow for one team/process
-2. Up to [N] processed meetings during pilot
+2. Up to 8 processed meetings during pilot
 3. Action-item outputs per meeting
 4. End-of-pilot baseline vs. outcome snapshot
 
 ---
 
-## 5) Timeline
-- Kickoff: [DATE]
-- First output: [DATE]
-- Midpoint review: [DATE]
-- Final review: [DATE]
+## 5) Timeline (default)
+- Kickoff: Day 1
+- First output: Day 3
+- Midpoint review: Day 7
+- Final review: Day 14
 
 ---
 
-## 6) Success Metrics
-- Reduction in post-meeting processing time
-- % of tasks with clear owner + due date
-- Stakeholder quality rating on output clarity
+## 6) Success Metrics (default targets)
+- 30%+ reduction in post-meeting processing time
+- 90%+ of tasks include clear owner + due date
+- Stakeholder quality rating >= 4/5 on output clarity
 
 ---
 

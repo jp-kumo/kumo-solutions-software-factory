@@ -31,25 +31,25 @@ Kumo Solutions will deliver a pilot content pipeline that converts agreed topics
 
 ## 4) Deliverables
 1. Pilot content workflow setup
-2. Up to [N] long-form drafts
-3. Up to [N] repurposed variants (LinkedIn/email snippets)
+2. Up to 4 long-form drafts
+3. Up to 8 repurposed variants (LinkedIn/email snippets)
 4. Delivery package (Markdown or Doc + simple content calendar)
 5. End-of-pilot recommendation report
 
 ---
 
-## 5) Timeline
-- Kickoff: [DATE]
-- First batch: [DATE]
-- Revision window: [DATE]
-- Final review: [DATE]
+## 5) Timeline (default)
+- Kickoff: Day 1
+- First batch: Day 4
+- Revision window: Days 8–10
+- Final review: Day 14
 
 ---
 
-## 6) Success Metrics
-- Draft acceptance rate
-- Turnaround time per content unit
-- Estimated hours saved vs prior process
+## 6) Success Metrics (default targets)
+- Draft acceptance rate >= 80% after first revision cycle
+- Turnaround time <= 72 hours per content unit
+- Estimated savings >= 5 hours/week vs prior process
 
 ---
 
