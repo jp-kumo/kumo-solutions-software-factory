@@ -39,6 +39,9 @@ DEFAULT_CFG = {
     "embedding_provider": "gemini",  # gemini|openai
     "embedding_model_gemini": "models/gemini-embedding-001",
     "embedding_model_openai": "text-embedding-3-small",
+    "synthesis_provider": "auto",  # auto|gemini|openai|none
+    "synthesis_model_gemini": "models/gemini-flash-latest",
+    "synthesis_model_openai": "gpt-4o-mini",
     "max_content_chars": 200000,
     "min_chars": 20,
     "min_non_tweet_chars": 500,
@@ -574,7 +577,7 @@ def ingest(input_value: str, tags: List[str], cfg: Dict[str, Any], force: bool =
     }
 
 
-def answer_with_context(question: str, contexts: List[Dict[str, Any]]) -> str:
+def answer_with_context(question: str, contexts: List[Dict[str, Any]], cfg: Optional[Dict[str, Any]] = None) -> str:
     ctx_text = "\n\n".join(
         f"[Source {i+1}] title={c['title']} url={c['url']}\n{c['excerpt']}"
         for i, c in enumerate(contexts)
@@ -588,37 +591,61 @@ def answer_with_context(question: str, contexts: List[Dict[str, Any]]) -> str:
     if requests is None:
         return "requests unavailable; cannot run LLM answer."
 
-    # Gemini preferred if key exists
-    gkey = os.getenv("GEMINI_API_KEY", "").strip()
-    if gkey:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gkey}"
-        r = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=40)
-        if r.ok:
-            return (
-                r.json()
-                .get("candidates", [{}])[0]
-                .get("content", {})
-                .get("parts", [{}])[0]
-                .get("text", "")
-                .strip()
+    cfg = cfg or {}
+    synthesis_provider = str(cfg.get("synthesis_provider", "auto")).lower().strip()
+    if synthesis_provider == "none":
+        return "Synthesis disabled by config (synthesis_provider=none)."
+
+    gemini_model = str(cfg.get("synthesis_model_gemini", "models/gemini-flash-latest")).strip()
+    openai_model = str(cfg.get("synthesis_model_openai", "gpt-4o-mini")).strip()
+
+    providers: List[str]
+    if synthesis_provider in {"gemini", "openai"}:
+        providers = [synthesis_provider]
+    else:
+        providers = ["gemini", "openai"]
+
+    errors: List[str] = []
+
+    for provider in providers:
+        if provider == "gemini":
+            gkey = os.getenv("GEMINI_API_KEY", "").strip()
+            if not gkey:
+                errors.append("gemini key missing")
+                continue
+            url = f"https://generativelanguage.googleapis.com/v1beta/{gemini_model}:generateContent?key={gkey}"
+            r = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=40)
+            if r.ok:
+                return (
+                    r.json()
+                    .get("candidates", [{}])[0]
+                    .get("content", {})
+                    .get("parts", [{}])[0]
+                    .get("text", "")
+                    .strip()
+                )
+            errors.append(f"gemini http {r.status_code}: {r.text[:160]}")
+
+        if provider == "openai":
+            okey = os.getenv("OPENAI_API_KEY", "").strip()
+            if not okey:
+                errors.append("openai key missing")
+                continue
+            r = requests.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={"Authorization": f"Bearer {okey}", "Content-Type": "application/json"},
+                json={
+                    "model": openai_model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.1,
+                },
+                timeout=40,
             )
+            if r.ok:
+                return r.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+            errors.append(f"openai http {r.status_code}: {r.text[:160]}")
 
-    okey = os.getenv("OPENAI_API_KEY", "").strip()
-    if okey:
-        r = requests.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={"Authorization": f"Bearer {okey}", "Content-Type": "application/json"},
-            json={
-                "model": "gpt-4o-mini",
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.1,
-            },
-            timeout=40,
-        )
-        if r.ok:
-            return r.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
-
-    return "No LLM key available for synthesis."
+    return "Synthesis unavailable. " + " | ".join(errors[:3])
 
 
 def query(question: str, cfg: Dict[str, Any], top_k: Optional[int] = None) -> Dict[str, Any]:
@@ -668,7 +695,7 @@ def query(question: str, cfg: Dict[str, Any], top_k: Optional[int] = None) -> Di
             break
 
     contexts = [v[1] for v in sorted(best_by_source.values(), key=lambda x: x[0], reverse=True)[:k]]
-    answer = answer_with_context(question, contexts)
+    answer = answer_with_context(question, contexts, cfg)
     return {"answer": answer, "contexts": contexts}
 
 

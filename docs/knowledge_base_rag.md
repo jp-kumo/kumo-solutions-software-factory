@@ -80,6 +80,12 @@ For embeddings / extraction fallbacks:
 - `OPENAI_API_KEY` (fallback)
 - `FIRECRAWL_API_KEY` (optional fallback for hard sites)
 
+For answer synthesis (query-time final response text):
+- `synthesis_provider` in `configs/knowledge_base.json` supports: `auto|gemini|openai|none`
+- `synthesis_model_gemini` default: `models/gemini-flash-latest`
+- `synthesis_model_openai` default: `gpt-4o-mini`
+- If synthesis fails, query output now returns provider-specific error details instead of a generic key-missing message.
+
 Optional local tools:
 - `yt-dlp`
 - `pdftotext` (poppler)
