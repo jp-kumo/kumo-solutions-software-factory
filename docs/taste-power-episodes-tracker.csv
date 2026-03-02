@@ -1,5 +1,5 @@
 episode_id,title,status,script_status,edit_status,thumb_status,published_url,notes
-EP01,The War for Pepper,Needs QA,Ready,Ready,Needs Pass,,Auto-synced from 20260206_171554_the_war_for_pepper
+EP01,The War for Pepper,Ready to Schedule,Ready,Ready,Ready,,Publish package completed (docs/taste-power-ep01-publish-package.md); QA gate 5/5 pass; titles/thumbnail/description/chapters/pinned comment/short hooks finalized from 20260206_171554_the_war_for_pepper artifacts.
 EP02,The Cinnamon Wars,Needs QA,Ready,Ready,Needs Pass,,Auto-synced from 20260206_165929_the_cinnamon_wars
 EP03,The Nutmeg Wars,Needs QA,Ready,Ready,Needs Pass,,Auto-synced from 20260206_164323_the_nutmeg_wars
 EP04,The History of Tea,Planned,Draft,Not Started,Not Started,,Research exists.
