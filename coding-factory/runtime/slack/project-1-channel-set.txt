@@ -1,0 +1,12 @@
+# Project #1 Slack Channel Set — Kumo Solutions Mission Control v1
+# Prefix convention: proj-kumo-mission-control-v1
+
+#agent-control-tower
+#proj-kumo-mission-control-v1-intake
+#proj-kumo-mission-control-v1-arch
+#proj-kumo-mission-control-v1-web
+#proj-kumo-mission-control-v1-mobile
+#proj-kumo-mission-control-v1-api
+#proj-kumo-mission-control-v1-qa
+#proj-kumo-mission-control-v1-release
+#proj-kumo-mission-control-v1-incidents
