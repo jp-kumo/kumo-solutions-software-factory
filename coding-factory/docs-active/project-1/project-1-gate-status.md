@@ -10,10 +10,20 @@ Date: 2026-03-03
 - Build plan: present
 - Operator runbook: present
 
-## Earliest missing gates (blocking coding start)
-1. Architecture RFC formal gate decision (GO/NO-GO)
-2. API/data contract handoff sign-off
-3. QA/test plan handoff sign-off
-4. Security intake review record (OWASP/ASVS/API checks scoped for v1)
+## Gate artifacts now staged
+- Gate 01: `gates/01-architecture-rfc.md` → **GO** (architecture approved)
+- Gate 02: `gates/02-api-data-contract.md` → **UNDER STAKEHOLDER REVIEW**
+- Gate 03: `gates/03-qa-test-plan.md` → **READY (PENDING EXECUTION EVIDENCE)**
+- Gate 04: `gates/04-security-intake-review.md` → **BLOCK BY DEFAULT UNTIL EXIT CRITERIA MET**
 
-Status: **BLOCKED FOR CODING** until earliest missing gate is satisfied.
+## Earliest-missing-gate enforcement (authoritative)
+Current earliest missing gate: **Gate 02 API/Data Contract sign-off**.
+
+No coding progression is permitted until Gate 02 is signed off.
+After Gate 02 clears, progression remains blocked until Gate 03 and Gate 04 criteria are satisfied.
+
+## Current project status
+Status: **BLOCKED FOR CODING** (governance compliant)
+
+## Owner-only decision rule
+Only the owner may accept material business/security risk, and only in writing.
