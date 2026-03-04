@@ -66,6 +66,53 @@ class ProjectMarkdownComplianceTests(unittest.TestCase):
             self.assertTrue(json_report.exists())
             self.assertTrue(md_report.exists())
 
+    def test_run_check_min_md_files_threshold_enforced(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            projects_dir = root / 'projects'
+            project = projects_dir / 'p1'
+            project.mkdir(parents=True)
+            (project / 'README.md').write_text('# readme\n', encoding='utf-8')
+            docs = project / 'docs'
+            docs.mkdir()
+            (docs / 'decisions.md').write_text('ok\n', encoding='utf-8')
+
+            code = run_check(
+                projects_dir=projects_dir,
+                json_report=root / 'report.json',
+                md_report=root / 'report.md',
+                required_files=['README.md', 'docs/decisions.md'],
+                min_md_files=3,
+            )
+
+            self.assertEqual(code, 2)
+            text = (root / 'report.md').read_text(encoding='utf-8')
+            self.assertIn('__min_markdown_files__ (2 < 3)', text)
+
+    def test_run_check_excludes_configured_dirs_from_md_count(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            projects_dir = root / 'projects'
+            project = projects_dir / 'p1'
+            project.mkdir(parents=True)
+            (project / 'README.md').write_text('# readme\n', encoding='utf-8')
+
+            (project / 'node_modules').mkdir()
+            (project / 'node_modules' / 'vendor.md').write_text('noise\n', encoding='utf-8')
+
+            code = run_check(
+                projects_dir=projects_dir,
+                json_report=root / 'report.json',
+                md_report=root / 'report.md',
+                required_files=['README.md'],
+                min_md_files=2,
+                exclude_dirs={'node_modules'},
+            )
+
+            self.assertEqual(code, 2)
+            text = (root / 'report.md').read_text(encoding='utf-8')
+            self.assertIn('| p1 | 1 | ❌ Missing files |', text)
+
 
 if __name__ == '__main__':
     unittest.main()

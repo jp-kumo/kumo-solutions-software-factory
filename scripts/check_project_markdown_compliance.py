@@ -22,6 +22,18 @@ DEFAULT_REQUIRED_FILES = [
     'docs/changelog.md',
 ]
 
+DEFAULT_MD_EXCLUDE_DIRS = {
+    '.git',
+    '.venv',
+    'venv',
+    'node_modules',
+    '__pycache__',
+    '.pytest_cache',
+    '.mypy_cache',
+    'dist',
+    'build',
+}
+
 
 @dataclass
 class ProjectCompliance:
@@ -38,13 +50,38 @@ def parse_required_files(raw: str | None) -> list[str]:
     return files or DEFAULT_REQUIRED_FILES.copy()
 
 
+def parse_exclude_dirs(raw: str | None) -> set[str]:
+    if not raw:
+        return set(DEFAULT_MD_EXCLUDE_DIRS)
+    parsed = {x.strip() for x in raw.split(',') if x.strip()}
+    return parsed or set(DEFAULT_MD_EXCLUDE_DIRS)
+
+
 def list_projects(projects_dir: Path) -> Iterable[Path]:
     return sorted(x for x in projects_dir.iterdir() if x.is_dir())
 
 
-def check_project(project_dir: Path, required_files: list[str]) -> ProjectCompliance:
+def count_markdown_files(project_dir: Path, exclude_dirs: set[str]) -> int:
+    count = 0
+    for path in project_dir.rglob('*.md'):
+        if any(part in exclude_dirs for part in path.relative_to(project_dir).parts):
+            continue
+        count += 1
+    return count
+
+
+def check_project(
+    project_dir: Path,
+    required_files: list[str],
+    exclude_dirs: set[str],
+    min_md_files: int,
+) -> ProjectCompliance:
     missing = [rel for rel in required_files if not (project_dir / rel).exists()]
-    md_count = len(list(project_dir.rglob('*.md')))
+    md_count = count_markdown_files(project_dir, exclude_dirs)
+
+    if md_count < min_md_files:
+        missing.append(f'__min_markdown_files__ ({md_count} < {min_md_files})')
+
     return ProjectCompliance(
         project=project_dir.name,
         md_count=md_count,
@@ -58,6 +95,8 @@ def build_markdown_report(
     projects_dir: Path,
     required_files: list[str],
     results: list[ProjectCompliance],
+    min_md_files: int,
+    exclude_dirs: set[str],
 ) -> str:
     non_compliant = [r for r in results if not r.ok]
     lines = [
@@ -67,11 +106,17 @@ def build_markdown_report(
         f'- Projects directory: `{projects_dir}`',
         f'- Project count: **{len(results)}**',
         f'- Non-compliant projects: **{len(non_compliant)}**',
+        f'- Minimum markdown files per project: **{min_md_files}**',
         '',
         '## Required files',
         '',
     ]
     lines.extend(f'- `{f}`' for f in required_files)
+
+    lines.extend(['', '## Markdown count exclusions', ''])
+    for directory in sorted(exclude_dirs):
+        lines.append(f'- `{directory}`')
+
     lines.extend(['', '## Project status', ''])
 
     if not results:
@@ -95,9 +140,12 @@ def run_check(
     json_report: Path,
     md_report: Path,
     required_files: list[str],
+    min_md_files: int = 1,
+    exclude_dirs: set[str] | None = None,
 ) -> int:
     generated_at = datetime.now(timezone.utc).isoformat()
     json_report.parent.mkdir(parents=True, exist_ok=True)
+    exclude_dirs = exclude_dirs or set(DEFAULT_MD_EXCLUDE_DIRS)
 
     if not projects_dir.exists():
         report = {
@@ -105,18 +153,35 @@ def run_check(
             'generated_at': generated_at,
             'projects_dir': str(projects_dir),
             'required_files': required_files,
+            'min_md_files': min_md_files,
+            'exclude_dirs': sorted(exclude_dirs),
             'projects': [],
             'message': 'No projects directory found.',
         }
         json_report.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
         md_report.write_text(
-            build_markdown_report(generated_at, projects_dir, required_files, []),
+            build_markdown_report(
+                generated_at,
+                projects_dir,
+                required_files,
+                [],
+                min_md_files=min_md_files,
+                exclude_dirs=exclude_dirs,
+            ),
             encoding='utf-8',
         )
         print(json.dumps({'ok': True, 'project_count': 0, 'non_compliant_count': 0}, indent=2))
         return 0
 
-    results = [check_project(p, required_files) for p in list_projects(projects_dir)]
+    results = [
+        check_project(
+            p,
+            required_files=required_files,
+            exclude_dirs=exclude_dirs,
+            min_md_files=min_md_files,
+        )
+        for p in list_projects(projects_dir)
+    ]
     non_compliant = [r for r in results if not r.ok]
 
     report = {
@@ -124,6 +189,8 @@ def run_check(
         'generated_at': generated_at,
         'projects_dir': str(projects_dir),
         'required_files': required_files,
+        'min_md_files': min_md_files,
+        'exclude_dirs': sorted(exclude_dirs),
         'project_count': len(results),
         'non_compliant_count': len(non_compliant),
         'projects': [asdict(r) for r in results],
@@ -131,7 +198,14 @@ def run_check(
 
     json_report.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
     md_report.write_text(
-        build_markdown_report(generated_at, projects_dir, required_files, results),
+        build_markdown_report(
+            generated_at,
+            projects_dir,
+            required_files,
+            results,
+            min_md_files=min_md_files,
+            exclude_dirs=exclude_dirs,
+        ),
         encoding='utf-8',
     )
 
@@ -179,6 +253,18 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help='Comma-separated list of required relative file paths. Uses defaults when omitted.',
     )
+    parser.add_argument(
+        '--min-md-files',
+        type=int,
+        default=1,
+        help='Minimum markdown file count per project for compliance (default: 1).',
+    )
+    parser.add_argument(
+        '--exclude-dirs',
+        type=str,
+        default=None,
+        help='Comma-separated directory names to exclude from markdown counting.',
+    )
     return parser
 
 
@@ -186,11 +272,18 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
     required_files = parse_required_files(args.required_files)
+    exclude_dirs = parse_exclude_dirs(args.exclude_dirs)
+
+    if args.min_md_files < 0:
+        parser.error('--min-md-files must be >= 0')
+
     return run_check(
         projects_dir=args.projects_dir,
         json_report=args.json_report,
         md_report=args.md_report,
         required_files=required_files,
+        min_md_files=args.min_md_files,
+        exclude_dirs=exclude_dirs,
     )
 
 

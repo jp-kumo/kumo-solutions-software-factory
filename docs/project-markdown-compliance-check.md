@@ -8,6 +8,8 @@ This workspace includes a documentation compliance checker at:
 
 - Scans each project under `projects/`
 - Verifies required docs exist (README + key docs under `docs/`)
+- Supports an optional minimum markdown-file threshold per project
+- Excludes noisy directories from markdown counts (`node_modules`, `.git`, `__pycache__`, etc.)
 - Generates:
   - machine-readable JSON report
   - human-readable markdown report
@@ -39,6 +41,11 @@ python3 scripts/check_project_markdown_compliance.py \
   --json-report /tmp/compliance.json \
   --md-report /tmp/compliance.md \
   --required-files "README.md,docs/roadmap.md,docs/changelog.md"
+
+# Enforce a richer docs baseline and ignore vendor/cache directories in counts
+python3 scripts/check_project_markdown_compliance.py \
+  --min-md-files 5 \
+  --exclude-dirs ".git,node_modules,__pycache__,.venv,dist,build"
 ```
 
 Exit code:
