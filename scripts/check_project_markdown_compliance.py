@@ -40,6 +40,9 @@ class ProjectCompliance:
     project: str
     md_count: int
     missing_required: list[str]
+    present_required_count: int
+    required_total: int
+    required_coverage_pct: float
     ok: bool
 
 
@@ -57,8 +60,8 @@ def parse_exclude_dirs(raw: str | None) -> set[str]:
     return parsed or set(DEFAULT_MD_EXCLUDE_DIRS)
 
 
-def list_projects(projects_dir: Path) -> Iterable[Path]:
-    return sorted(x for x in projects_dir.iterdir() if x.is_dir())
+def list_projects(projects_dir: Path, project_glob: str = '*') -> Iterable[Path]:
+    return sorted(x for x in projects_dir.glob(project_glob) if x.is_dir())
 
 
 def count_markdown_files(project_dir: Path, exclude_dirs: set[str]) -> int:
@@ -82,10 +85,17 @@ def check_project(
     if md_count < min_md_files:
         missing.append(f'__min_markdown_files__ ({md_count} < {min_md_files})')
 
+    required_total = len(required_files)
+    present_required_count = required_total - len([m for m in missing if not m.startswith('__min_markdown_files__')])
+    required_coverage_pct = (present_required_count / required_total * 100.0) if required_total else 100.0
+
     return ProjectCompliance(
         project=project_dir.name,
         md_count=md_count,
         missing_required=missing,
+        present_required_count=present_required_count,
+        required_total=required_total,
+        required_coverage_pct=round(required_coverage_pct, 1),
         ok=len(missing) == 0,
     )
 
@@ -124,12 +134,13 @@ def build_markdown_report(
         lines.append('')
         return '\n'.join(lines)
 
-    lines.append('| Project | Markdown Files | Status | Missing |')
-    lines.append('|---|---:|---|---|')
+    lines.append('| Project | Markdown Files | Required Coverage | Status | Missing |')
+    lines.append('|---|---:|---:|---|---|')
     for r in results:
         status = '✅ OK' if r.ok else '❌ Missing files'
         missing = ', '.join(f'`{m}`' for m in r.missing_required) if r.missing_required else '—'
-        lines.append(f'| {r.project} | {r.md_count} | {status} | {missing} |')
+        coverage = f"{r.present_required_count}/{r.required_total} ({r.required_coverage_pct:.1f}%)"
+        lines.append(f'| {r.project} | {r.md_count} | {coverage} | {status} | {missing} |')
 
     lines.append('')
     return '\n'.join(lines)
@@ -142,6 +153,7 @@ def run_check(
     required_files: list[str],
     min_md_files: int = 1,
     exclude_dirs: set[str] | None = None,
+    project_glob: str = '*',
 ) -> int:
     generated_at = datetime.now(timezone.utc).isoformat()
     json_report.parent.mkdir(parents=True, exist_ok=True)
@@ -152,6 +164,7 @@ def run_check(
             'ok': True,
             'generated_at': generated_at,
             'projects_dir': str(projects_dir),
+            'project_glob': project_glob,
             'required_files': required_files,
             'min_md_files': min_md_files,
             'exclude_dirs': sorted(exclude_dirs),
@@ -180,7 +193,7 @@ def run_check(
             exclude_dirs=exclude_dirs,
             min_md_files=min_md_files,
         )
-        for p in list_projects(projects_dir)
+        for p in list_projects(projects_dir, project_glob=project_glob)
     ]
     non_compliant = [r for r in results if not r.ok]
 
@@ -188,6 +201,7 @@ def run_check(
         'ok': len(non_compliant) == 0,
         'generated_at': generated_at,
         'projects_dir': str(projects_dir),
+        'project_glob': project_glob,
         'required_files': required_files,
         'min_md_files': min_md_files,
         'exclude_dirs': sorted(exclude_dirs),
@@ -265,6 +279,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help='Comma-separated directory names to exclude from markdown counting.',
     )
+    parser.add_argument(
+        '--project-glob',
+        type=str,
+        default='*',
+        help='Glob pattern to select project directories (default: *).',
+    )
     return parser
 
 
@@ -284,6 +304,7 @@ def main() -> int:
         required_files=required_files,
         min_md_files=args.min_md_files,
         exclude_dirs=exclude_dirs,
+        project_glob=args.project_glob,
     )
 
 

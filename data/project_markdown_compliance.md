@@ -1,6 +1,6 @@
 # Project Markdown Compliance Report
 
-- Generated: 2026-03-04T05:16:32.599935+00:00
+- Generated: 2026-03-05T05:16:52.814968+00:00
 - Projects directory: `/home/jpadmin/.openclaw/workspace/projects`
 - Project count: **2**
 - Non-compliant projects: **0**
@@ -28,7 +28,7 @@
 
 ## Project status
 
-| Project | Markdown Files | Status | Missing |
-|---|---:|---|---|
-| cobol-modernization-bridge | 8 | ✅ OK | — |
-| secure-health-rag-reference | 5 | ✅ OK | — |
+| Project | Markdown Files | Required Coverage | Status | Missing |
+|---|---:|---:|---|---|
+| cobol-modernization-bridge | 8 | 5/5 (100.0%) | ✅ OK | — |
+| secure-health-rag-reference | 5 | 5/5 (100.0%) | ✅ OK | — |

@@ -111,7 +111,33 @@ class ProjectMarkdownComplianceTests(unittest.TestCase):
 
             self.assertEqual(code, 2)
             text = (root / 'report.md').read_text(encoding='utf-8')
-            self.assertIn('| p1 | 1 | ❌ Missing files |', text)
+            self.assertIn('| p1 | 1 | 1/1 (100.0%) | ❌ Missing files |', text)
+
+    def test_run_check_project_glob_filters_projects(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            projects_dir = root / 'projects'
+            projects_dir.mkdir(parents=True)
+
+            selected = projects_dir / 'ai-selected'
+            selected.mkdir()
+            (selected / 'README.md').write_text('# ok\n', encoding='utf-8')
+
+            ignored = projects_dir / 'web-ignored'
+            ignored.mkdir()
+
+            code = run_check(
+                projects_dir=projects_dir,
+                json_report=root / 'report.json',
+                md_report=root / 'report.md',
+                required_files=['README.md'],
+                project_glob='ai-*',
+            )
+
+            self.assertEqual(code, 0)
+            text = (root / 'report.md').read_text(encoding='utf-8')
+            self.assertIn('ai-selected', text)
+            self.assertNotIn('web-ignored', text)
 
 
 if __name__ == '__main__':

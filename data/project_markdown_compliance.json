@@ -1,7 +1,8 @@
 {
   "ok": true,
-  "generated_at": "2026-03-04T05:16:32.599935+00:00",
+  "generated_at": "2026-03-05T05:16:52.814968+00:00",
   "projects_dir": "/home/jpadmin/.openclaw/workspace/projects",
+  "project_glob": "*",
   "required_files": [
     "README.md",
     "docs/decisions.md",
@@ -28,12 +29,18 @@
       "project": "cobol-modernization-bridge",
       "md_count": 8,
       "missing_required": [],
+      "present_required_count": 5,
+      "required_total": 5,
+      "required_coverage_pct": 100.0,
       "ok": true
     },
     {
       "project": "secure-health-rag-reference",
       "md_count": 5,
       "missing_required": [],
+      "present_required_count": 5,
+      "required_total": 5,
+      "required_coverage_pct": 100.0,
       "ok": true
     }
   ]
