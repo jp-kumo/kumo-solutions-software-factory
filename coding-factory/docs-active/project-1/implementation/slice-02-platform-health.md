@@ -77,3 +77,28 @@ Interpretation: current user is **not** in `docker` group, so it cannot access `
 
 ### Security note
 This evidence intentionally avoids printing `.env` secret values and includes only non-secret operational metadata.
+
+## 6) Rerun after Docker unblock claim (2026-03-06 19:37:54 UTC)
+
+- **Rerun status:** **FAIL**
+- **Command attempted:** `docker compose up -d` (from `mission-control-v1` project root)
+
+### Rerun evidence
+```text
+2026-03-06 19:37:54 UTC
+unable to get image 'postgres:16-alpine': permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.51/images/postgres:16-alpine/json": dial unix /var/run/docker.sock: connect: permission denied
+```
+
+### Health verification outcome for required services
+- PostgreSQL (`mission-control-postgres`): **NOT VERIFIED** (stack did not start)
+- Appsmith (`mission-control-appsmith`): **NOT VERIFIED** (stack did not start)
+- Metabase (`mission-control-metabase`): **NOT VERIFIED** (stack did not start)
+
+### Minimal recovery plan (updated)
+1. Ensure `jpadmin` is in the `docker` group on this host and that group membership is active in the current session (`id` should include `docker`).
+2. Re-run from `coding-factory/runtime/project-1/mission-control-v1`:
+   - `docker compose up -d`
+   - `docker compose ps`
+3. Collect exact health evidence:
+   - `docker inspect --format '{{.Name}} {{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}}' mission-control-postgres mission-control-appsmith mission-control-metabase`
+4. If services are running, validate HTTP reachability for Appsmith and Metabase on configured ports.
