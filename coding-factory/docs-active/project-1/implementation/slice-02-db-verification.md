@@ -1,6 +1,6 @@
 # Slice 02 — DB bootstrap/migration/seed/view verification (Mission Control v1)
 
-Date (UTC): 2026-03-06 19:30
+Date (UTC): 2026-03-06 19:38 (rerun)
 
 ## Scope executed
 Project path:
@@ -15,6 +15,24 @@ Requested scope:
 Status: **BLOCKED (environment/runtime permissions)**
 
 I could validate that the expected SQL artifacts exist in-repo, but I could not execute PostgreSQL initialization/migration/seed statements in this environment due Docker daemon access restrictions and missing local `psql` client.
+
+## Rerun (2026-03-06 19:37–19:38 UTC)
+Commands executed from project root `/home/jpadmin/.openclaw/workspace/coding-factory/runtime/project-1/mission-control-v1`:
+
+```bash
+docker compose ps
+sudo -n docker compose ps
+pg_isready -h localhost -p 5432 -U mission_control_app -d mission_control
+```
+
+Observed outputs:
+- `docker compose ps` -> permission denied on `/var/run/docker.sock`
+- `sudo -n docker compose ps` -> `sudo: a password is required`
+- `pg_isready ...` -> `command not found`
+
+Interpretation:
+- DB container state cannot be verified from this execution identity.
+- Runtime migration/seed/view query checks remain blocked until Docker access is granted (or equivalent privileged operator reruns).
 
 ## Evidence
 
