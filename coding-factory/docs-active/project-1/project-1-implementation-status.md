@@ -13,6 +13,17 @@ Status: **IN PROGRESS**
 - Validated Docker Compose configuration:
   - `docker compose config` (via `make validate`) passed
 
+## Slice 02 progress update (runtime)
+- Docker access path fixed for execution context.
+- Local stack now boots successfully for Project #1 runtime.
+- To avoid collisions with existing host services, local ports were remapped in runtime env:
+  - PostgreSQL host port: `15432` (container `5432`)
+  - Metabase host port: `13000` (container `3000`)
+- Current container status:
+  - `mission-control-postgres` = healthy
+  - `mission-control-metabase` = up
+  - `mission-control-appsmith` = up (health starting)
+
 ## Next implementation slices
 1. Configure Kumo-specific environment values and secret rotation.
 2. Boot local stack and verify service health (PostgreSQL/Appsmith/Metabase).
