@@ -102,3 +102,44 @@ unable to get image 'postgres:16-alpine': permission denied while trying to conn
 3. Collect exact health evidence:
    - `docker inspect --format '{{.Name}} {{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}}' mission-control-postgres mission-control-appsmith mission-control-metabase`
 4. If services are running, validate HTTP reachability for Appsmith and Metabase on configured ports.
+
+## 7) Retry after gateway restart under jpadmin user bus (2026-03-06 19:47:55 UTC)
+
+- **Requested context:** "gateway restarted under jpadmin user bus"
+- **Rerun status:** **FAIL** (unchanged Docker daemon access denial)
+- **Executor user:** `jpadmin`
+
+### Commands attempted
+```bash
+docker compose up -d
+docker compose ps
+```
+
+### Command results
+- `docker compose up -d` → **FAILED**
+- `docker compose ps` → **FAILED**
+
+### Failure evidence
+```text
+unable to get image 'appsmith/appsmith-ce': permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.51/images/appsmith/appsmith-ce/json": dial unix /var/run/docker.sock: connect: permission denied
+
+permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.oneoff%3DFalse%22%3Atrue%2C%22com.docker.compose.project%3Dmission-control%22%3Atrue%7D%7D": dial unix /var/run/docker.sock: connect: permission denied
+```
+
+### User/socket context captured during retry
+```text
+whoami -> jpadmin
+id -> uid=1001(jpadmin) gid=1001(jpadmin) groups=1001(jpadmin),27(sudo),100(users)
+ls -l /var/run/docker.sock -> srw-rw---- 1 root docker 0 Feb 19 20:24 /var/run/docker.sock
+```
+
+### Core service health/reachability outcome
+- PostgreSQL (`mission-control-postgres`): **NOT REACHABLE / NOT VERIFIED** (containers cannot be listed/started)
+- Appsmith (`mission-control-appsmith`): **NOT REACHABLE / NOT VERIFIED**
+- Metabase (`mission-control-metabase`): **NOT REACHABLE / NOT VERIFIED**
+
+### Exact blocker (command/user/context)
+- **Command(s):** `docker compose up -d`, `docker compose ps`
+- **User:** `jpadmin`
+- **Project directory:** `/home/jpadmin/.openclaw/workspace/coding-factory/runtime/project-1/mission-control-v1`
+- **Blocking condition:** `jpadmin` session lacks access to Docker daemon socket (`/var/run/docker.sock`, group `docker`).
