@@ -171,3 +171,64 @@ Result: all current Metabase SQL questions reference existing reporting views.
 - **v1-safe handling:** add one GUI metric on `vw_weekly_review_snapshot` (`max(review_week_start)`) to indicate latest week loaded.
 
 No schema migration required for the above v1 fixes.
+
+---
+
+## 5) Runtime Verification Pass (2026-03-06 UTC)
+
+### A. Local service reachability checks
+
+Executed from project runtime root:
+`/home/jpadmin/.openclaw/workspace/coding-factory/runtime/project-1/mission-control-v1`
+
+- TCP check: `127.0.0.1:5432` → **open**
+- TCP check: `127.0.0.1:3000` → **open**
+- HTTP probe: `http://127.0.0.1:3000/` returns `200`, header `X-Powered-By: Next.js`, title `OpenClaw Mission Control`
+
+**Interpretation:**
+- A web service is reachable on port `3000`, but it is **not Metabase** (Metabase would expose Metabase API/UI signatures, not a Next.js Mission Control login page).
+- PostgreSQL port is reachable.
+
+### B. SQL question execution validation status
+
+Metabase question files present and syntactically executable against Postgres if reporting views exist:
+- `metabase/questions/01-due-soon.sql`
+- `metabase/questions/02-owner-decisions.sql`
+- `metabase/questions/03-blocked-projects.sql`
+- `metabase/questions/04-security-posture.sql`
+- `metabase/questions/05-portfolio-rollup.sql`
+- `metabase/questions/06-weekly-review-snapshot.sql`
+
+**Runtime exec blocker (exact):**
+1. `docker compose ps` (and any `docker compose exec ...`) fails in this runtime context with:
+   - `permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock`
+2. No local `psql` client available in PATH for direct host-side SQL execution.
+
+Because of the above, this pass cannot produce row-level query output from the live runtime DB despite open DB port. This is an environment-permission/client-tooling blocker, not a SQL file mismatch blocker.
+
+---
+
+## 6) Final Dashboard Assembly — Next Actions
+
+1. **Restore container control for verification**
+   - Run verification as a user in the `docker` group, or with approved elevated access.
+   - Re-run:
+     - `docker compose ps`
+     - `docker compose exec -T postgres psql -U mission_control_app -d mission_control -f /path/to/question.sql` for each question.
+
+2. **Confirm Metabase service binding**
+   - Ensure compose `metabase` is actually bound to expected host port (`3000` by default here).
+   - If Mission Control UI must keep `3000`, remap Metabase to a free port (e.g., `3001`) and update runbook.
+
+3. **Complete live data verification checklist**
+   - Capture row counts/sample outputs for all 6 SQL questions.
+   - Validate sort/filter semantics used by each dashboard card.
+
+4. **Assemble final dashboards in Metabase**
+   - Create 5 dashboards listed in Scope.
+   - Attach validated questions (plus GUI aggregates where noted).
+   - Apply default filters/labels (including “Pending Review” handling for null security rows).
+
+5. **Sign-off packet completion**
+   - Add screenshot links/IDs for each dashboard.
+   - Mark section 3 checklist items complete based on live verification evidence.
