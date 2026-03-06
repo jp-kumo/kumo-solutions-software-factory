@@ -537,3 +537,62 @@ returning id;
 
 - This packet is artifact-only and implementation-ready; UI manipulation in Appsmith is not claimed as completed here.
 - Where prior gate docs differ from runtime schema naming, runtime DB migration files are treated as source of truth for this slice.
+
+---
+
+## 11) Runtime verification — Appsmith reachability (local stack)
+
+Verification timestamp: **2026-03-06 19:38:02 UTC**
+
+Checks executed from `runtime/project-1/mission-control-v1`:
+
+1. `docker compose ps`
+   - **Result:** failed in current shell context with Docker socket permission error:
+   - `permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock`
+2. `curl -sS -D - http://127.0.0.1:8080/`
+   - **Result:** connection failed (`curl: (7) Could not connect to server`)
+3. `ss -ltnp | grep ':8080\b'`
+   - **Result:** no listener detected on Appsmith port `8080`
+
+### Verification conclusion
+
+- **Appsmith is not reachable** from this runtime context at `http://127.0.0.1:8080`.
+- Current evidence indicates either:
+  - Docker services are not started, or
+  - Docker daemon is running but inaccessible to this user/session due to socket permission constraints.
+
+---
+
+## 12) Next implementation actions (once runtime is reachable)
+
+1. Restore Docker control for this operator/session (or run via a user with Docker access).
+2. Start stack from project root:
+   - `docker compose up -d`
+3. Re-verify health/reachability:
+   - `docker compose ps`
+   - `curl -I http://127.0.0.1:8080/` (Appsmith)
+   - `curl -I http://127.0.0.1:3000/` (Metabase)
+4. In Appsmith UI, configure PostgreSQL datasource to `mission_control` and run `select now();`.
+5. Implement pages in this packet in order:
+   - Portfolio Dashboard → Projects Registry → Weekly Review → Decisions Log → Security Review Queue.
+6. Execute section **9) End-to-end acceptance checklist (slice-level)** and capture pass/fail notes.
+
+---
+
+## 13) Blockers / dependencies for page implementation
+
+### Active blockers
+
+- **Blocker A — Docker daemon access in this execution context**
+  - Cannot run `docker compose ps` due to `/var/run/docker.sock` permission denied.
+  - Prevents validating container health/state directly.
+
+- **Blocker B — Appsmith service not reachable on configured port**
+  - Port `8080` has no active listener and HTTP probe fails.
+  - Appsmith page implementation cannot proceed until service is up and reachable.
+
+### Dependencies
+
+- Docker daemon availability + operator permission to manage compose stack.
+- `mission-control-v1/.env` configured values (already present; includes `APPSMITH_PORT=8080`).
+- Postgres service healthy before Appsmith startup (`depends_on` condition in compose).
