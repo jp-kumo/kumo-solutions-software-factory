@@ -114,3 +114,61 @@ Seed file `db/seeds/001_sample_seed.sql` is largely idempotent using `ON CONFLIC
 
 ## Conclusion
 Execution of bootstrap/migrations/seeds and runtime queryability verification is currently blocked by host permissions, not SQL definition gaps. All required view definitions are present in the approved v1 migration artifact.
+---
+
+## Post-gateway-restart retry (2026-03-06 19:47 UTC)
+Status: **STILL BLOCKED (same runtime permission boundary)**
+
+Context:
+- Execution user: `jpadmin` (`uid=1001`, `gid=1001`)
+- Host/session: subagent run in OpenClaw workspace on `srv1360381`
+- Target project: `/home/jpadmin/.openclaw/workspace/coding-factory/runtime/project-1/mission-control-v1`
+
+Commands executed and outcomes:
+
+1) Verify runtime identity and docker socket access
+```bash
+id && ls -l /var/run/docker.sock
+```
+Output:
+```text
+uid=1001(jpadmin) gid=1001(jpadmin) groups=1001(jpadmin),27(sudo),100(users)
+srw-rw---- 1 root docker 0 Feb 19 20:24 /var/run/docker.sock
+```
+Result: `jpadmin` is still not in `docker` group; socket remains inaccessible.
+
+2) Check compose-managed DB/service reachability
+```bash
+docker compose ps
+```
+Output:
+```text
+permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.oneoff%3DFalse%22%3Atrue%2C%22com.docker.compose.project%3Dmission-control%22%3Atrue%7D%7D": dial unix /var/run/docker.sock: connect: permission denied
+```
+Result: DB service cannot be inspected/started from this user context.
+
+3) Check local SQL client fallback
+```bash
+which psql || true; psql --version || true
+```
+Output:
+```text
+/bin/bash: line 1: psql: command not found
+```
+Result: No direct `psql` fallback available for migration/seed/view checks.
+
+### Impact on requested verification steps
+- **(1) Ensure DB service up/reachable:** blocked (docker socket permission denied)
+- **(2) Apply/verify migrations/seeds:** blocked (cannot connect to runtime DB; no local psql)
+- **(3) Execute vw_* queryability checks:** blocked (no DB session available)
+
+### Exact blocking command/user/context (as requested)
+- User/context: `jpadmin` subagent shell on `srv1360381`
+- Blocking command:
+  ```bash
+  docker compose ps
+  ```
+- Blocking error:
+  ```text
+  permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock ... dial unix /var/run/docker.sock: connect: permission denied
+  ```
