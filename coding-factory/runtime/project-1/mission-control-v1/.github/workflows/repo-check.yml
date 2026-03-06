@@ -1,0 +1,21 @@
+name: repo-check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  repo-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate docker compose file
+        run: docker compose -f docker-compose.yml config >/dev/null
+      - name: Ensure required starter files exist
+        run: |
+          test -f README.md
+          test -f .env.example
+          test -f docker-compose.yml
+          test -f db/migrations/001_core_schema.sql
+          test -f db/migrations/002_reporting_views.sql
+          test -f docs/security-baseline.md

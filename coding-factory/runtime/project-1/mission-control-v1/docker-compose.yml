@@ -1,0 +1,57 @@
+name: mission-control
+
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE}
+    container_name: mission-control-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init/001-bootstrap.sql:/docker-entrypoint-initdb.d/001-bootstrap.sql:ro
+      - ./db/migrations/001_core_schema.sql:/docker-entrypoint-initdb.d/010_core_schema.sql:ro
+      - ./db/migrations/002_reporting_views.sql:/docker-entrypoint-initdb.d/020_reporting_views.sql:ro
+      - ./db/seeds/001_sample_seed.sql:/docker-entrypoint-initdb.d/090_sample_seed.sql:ro
+
+  appsmith:
+    image: ${APPSMITH_IMAGE}
+    container_name: mission-control-appsmith
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${APPSMITH_PORT}:80"
+    environment:
+      APPSMITH_DISABLE_TELEMETRY: "true"
+
+  metabase:
+    image: ${METABASE_IMAGE}
+    container_name: mission-control-metabase
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${METABASE_PORT}:3000"
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: ${METABASE_APP_DB}
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${METABASE_APP_DB_USER}
+      MB_DB_PASS: ${METABASE_APP_DB_PASSWORD}
+      MB_DB_HOST: postgres
+      MB_ENCRYPTION_SECRET_KEY: ${MB_ENCRYPTION_SECRET_KEY}
+
+volumes:
+  postgres_data:

@@ -20,7 +20,7 @@ Date: 2026-03-05
 All required pre-coding gates are now satisfied.
 
 ## Current project status
-Status: **READY FOR CODING START**
+Status: **CODING IN PROGRESS** (Slice 01 bootstrapped)
 
 ## Owner-only decision rule
 Only the owner may accept material business/security risk, and only in writing.
