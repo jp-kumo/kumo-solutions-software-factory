@@ -13,14 +13,14 @@ Date: 2026-03-05
 ## Gate artifacts now staged
 - Gate 01: `gates/01-architecture-rfc.md` → **GO**
 - Gate 02: `gates/02-api-data-contract.md` → **GO** (owner-approved; see `gates/gate-02-decision-2026-03-05.md`)
-- Gate 03: `gates/03-qa-test-plan.md` → **READY (PENDING EXECUTION EVIDENCE)**
+- Gate 03: `gates/03-qa-test-plan.md` → **GO (owner-approved)**
 - Gate 04: `gates/04-security-intake-review.md` → **BLOCK BY DEFAULT UNTIL EXIT CRITERIA MET**
 
 ## Earliest-missing-gate enforcement (authoritative)
-Current earliest missing gate: **Gate 03 QA execution evidence**.
+Current earliest missing gate: **Gate 04 security exit criteria completion**.
 
-No coding progression is permitted until Gate 03 evidence is attached and accepted.
-After Gate 03 clears, progression remains blocked until Gate 04 criteria are satisfied.
+No coding progression is permitted until Gate 04 exit criteria are met,
+or explicit owner-only written material risk acceptance is recorded.
 
 ## Current project status
 Status: **BLOCKED FOR CODING** (governance compliant)
