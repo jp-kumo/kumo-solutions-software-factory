@@ -46,6 +46,9 @@ python3 scripts/check_project_markdown_compliance.py \
 python3 scripts/check_project_markdown_compliance.py \
   --min-md-files 5 \
   --exclude-dirs ".git,node_modules,__pycache__,.venv,dist,build"
+
+# Quiet mode for cron/automation (reports still written, stdout suppressed)
+python3 scripts/check_project_markdown_compliance.py --quiet
 ```
 
 Exit code:

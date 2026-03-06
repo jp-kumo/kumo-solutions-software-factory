@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import contextlib
+import io
 import sys
 import tempfile
 import unittest
@@ -42,6 +44,7 @@ class ProjectMarkdownComplianceTests(unittest.TestCase):
                     'docs/security-notes.md',
                     'docs/changelog.md',
                 ],
+                emit_summary=False,
             )
 
             self.assertEqual(code, 2)
@@ -61,6 +64,7 @@ class ProjectMarkdownComplianceTests(unittest.TestCase):
                 json_report=json_report,
                 md_report=md_report,
                 required_files=['README.md'],
+                emit_summary=False,
             )
             self.assertEqual(code, 0)
             self.assertTrue(json_report.exists())
@@ -83,6 +87,7 @@ class ProjectMarkdownComplianceTests(unittest.TestCase):
                 md_report=root / 'report.md',
                 required_files=['README.md', 'docs/decisions.md'],
                 min_md_files=3,
+                emit_summary=False,
             )
 
             self.assertEqual(code, 2)
@@ -107,6 +112,7 @@ class ProjectMarkdownComplianceTests(unittest.TestCase):
                 required_files=['README.md'],
                 min_md_files=2,
                 exclude_dirs={'node_modules'},
+                emit_summary=False,
             )
 
             self.assertEqual(code, 2)
@@ -132,12 +138,34 @@ class ProjectMarkdownComplianceTests(unittest.TestCase):
                 md_report=root / 'report.md',
                 required_files=['README.md'],
                 project_glob='ai-*',
+                emit_summary=False,
             )
 
             self.assertEqual(code, 0)
             text = (root / 'report.md').read_text(encoding='utf-8')
             self.assertIn('ai-selected', text)
             self.assertNotIn('web-ignored', text)
+
+    def test_run_check_can_suppress_stdout_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            projects_dir = root / 'projects'
+            project = projects_dir / 'p1'
+            project.mkdir(parents=True)
+            (project / 'README.md').write_text('# ok\n', encoding='utf-8')
+
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                code = run_check(
+                    projects_dir=projects_dir,
+                    json_report=root / 'report.json',
+                    md_report=root / 'report.md',
+                    required_files=['README.md'],
+                    emit_summary=False,
+                )
+
+            self.assertEqual(code, 0)
+            self.assertEqual(buf.getvalue(), '')
 
 
 if __name__ == '__main__':

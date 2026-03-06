@@ -154,6 +154,7 @@ def run_check(
     min_md_files: int = 1,
     exclude_dirs: set[str] | None = None,
     project_glob: str = '*',
+    emit_summary: bool = True,
 ) -> int:
     generated_at = datetime.now(timezone.utc).isoformat()
     json_report.parent.mkdir(parents=True, exist_ok=True)
@@ -183,7 +184,8 @@ def run_check(
             ),
             encoding='utf-8',
         )
-        print(json.dumps({'ok': True, 'project_count': 0, 'non_compliant_count': 0}, indent=2))
+        if emit_summary:
+            print(json.dumps({'ok': True, 'project_count': 0, 'non_compliant_count': 0}, indent=2))
         return 0
 
     results = [
@@ -223,18 +225,19 @@ def run_check(
         encoding='utf-8',
     )
 
-    print(
-        json.dumps(
-            {
-                'ok': report['ok'],
-                'project_count': report['project_count'],
-                'non_compliant_count': report['non_compliant_count'],
-                'json_report_path': str(json_report),
-                'markdown_report_path': str(md_report),
-            },
-            indent=2,
+    if emit_summary:
+        print(
+            json.dumps(
+                {
+                    'ok': report['ok'],
+                    'project_count': report['project_count'],
+                    'non_compliant_count': report['non_compliant_count'],
+                    'json_report_path': str(json_report),
+                    'markdown_report_path': str(md_report),
+                },
+                indent=2,
+            )
         )
-    )
 
     return 0 if report['ok'] else 2
 
@@ -285,6 +288,11 @@ def build_parser() -> argparse.ArgumentParser:
         default='*',
         help='Glob pattern to select project directories (default: *).',
     )
+    parser.add_argument(
+        '--quiet',
+        action='store_true',
+        help='Suppress JSON summary output to stdout (files are still written).',
+    )
     return parser
 
 
@@ -305,6 +313,7 @@ def main() -> int:
         min_md_files=args.min_md_files,
         exclude_dirs=exclude_dirs,
         project_glob=args.project_glob,
+        emit_summary=not args.quiet,
     )
 
 
