@@ -6,7 +6,7 @@ import json
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Any
 
 DEFAULT_WORKSPACE = Path('/home/jpadmin/.openclaw/workspace')
 DEFAULT_PROJECTS_DIR = DEFAULT_WORKSPACE / 'projects'
@@ -100,6 +100,61 @@ def check_project(
     )
 
 
+def load_baseline_report(path: Path | None) -> dict[str, Any] | None:
+    if not path:
+        return None
+    if not path.exists() or not path.is_file():
+        return None
+    try:
+        return json.loads(path.read_text(encoding='utf-8'))
+    except json.JSONDecodeError:
+        return None
+
+
+def summarize_trend(current_results: list[ProjectCompliance], baseline_report: dict[str, Any] | None) -> dict[str, Any]:
+    baseline_projects: dict[str, dict[str, Any]] = {}
+    if baseline_report and isinstance(baseline_report.get('projects'), list):
+        for row in baseline_report['projects']:
+            if isinstance(row, dict) and isinstance(row.get('project'), str):
+                baseline_projects[row['project']] = row
+
+    current_map = {r.project: r for r in current_results}
+
+    improved: list[str] = []
+    regressed: list[str] = []
+    unchanged: list[str] = []
+
+    for project_name, row in current_map.items():
+        baseline = baseline_projects.get(project_name)
+        if not baseline:
+            continue
+
+        baseline_ok = bool(baseline.get('ok', False))
+        if row.ok and not baseline_ok:
+            improved.append(project_name)
+        elif (not row.ok) and baseline_ok:
+            regressed.append(project_name)
+        else:
+            unchanged.append(project_name)
+
+    current_non_compliant = sum(1 for r in current_results if not r.ok)
+    baseline_non_compliant = int(baseline_report.get('non_compliant_count', 0)) if baseline_report else None
+
+    return {
+        'has_baseline': baseline_report is not None,
+        'baseline_generated_at': baseline_report.get('generated_at') if baseline_report else None,
+        'baseline_project_count': baseline_report.get('project_count') if baseline_report else None,
+        'baseline_non_compliant_count': baseline_non_compliant,
+        'current_non_compliant_count': current_non_compliant,
+        'delta_non_compliant': (current_non_compliant - baseline_non_compliant)
+        if baseline_non_compliant is not None
+        else None,
+        'improved_projects': sorted(improved),
+        'regressed_projects': sorted(regressed),
+        'unchanged_projects_count': len(unchanged),
+    }
+
+
 def build_markdown_report(
     generated_at: str,
     projects_dir: Path,
@@ -107,6 +162,7 @@ def build_markdown_report(
     results: list[ProjectCompliance],
     min_md_files: int,
     exclude_dirs: set[str],
+    trend: dict[str, Any] | None = None,
 ) -> str:
     non_compliant = [r for r in results if not r.ok]
     lines = [
@@ -126,6 +182,20 @@ def build_markdown_report(
     lines.extend(['', '## Markdown count exclusions', ''])
     for directory in sorted(exclude_dirs):
         lines.append(f'- `{directory}`')
+
+    if trend and trend.get('has_baseline'):
+        lines.extend(['', '## Trend vs baseline', ''])
+        baseline_ts = trend.get('baseline_generated_at') or 'unknown'
+        delta = trend.get('delta_non_compliant')
+        delta_text = f"{delta:+d}" if isinstance(delta, int) else 'n/a'
+        lines.append(f"- Baseline generated: `{baseline_ts}`")
+        lines.append(
+            f"- Non-compliant projects: **{trend.get('baseline_non_compliant_count', 'n/a')} → {trend.get('current_non_compliant_count', 'n/a')}** (delta: **{delta_text}** )"
+        )
+        improved = trend.get('improved_projects') or []
+        regressed = trend.get('regressed_projects') or []
+        lines.append(f"- Improved projects: {', '.join(f'`{p}`' for p in improved) if improved else '—'}")
+        lines.append(f"- Regressed projects: {', '.join(f'`{p}`' for p in regressed) if regressed else '—'}")
 
     lines.extend(['', '## Project status', ''])
 
@@ -154,13 +224,17 @@ def run_check(
     min_md_files: int = 1,
     exclude_dirs: set[str] | None = None,
     project_glob: str = '*',
+    baseline_json: Path | None = None,
     emit_summary: bool = True,
 ) -> int:
     generated_at = datetime.now(timezone.utc).isoformat()
     json_report.parent.mkdir(parents=True, exist_ok=True)
     exclude_dirs = exclude_dirs or set(DEFAULT_MD_EXCLUDE_DIRS)
 
+    baseline_report = load_baseline_report(baseline_json)
+
     if not projects_dir.exists():
+        trend = summarize_trend([], baseline_report)
         report = {
             'ok': True,
             'generated_at': generated_at,
@@ -170,6 +244,7 @@ def run_check(
             'min_md_files': min_md_files,
             'exclude_dirs': sorted(exclude_dirs),
             'projects': [],
+            'trend': trend,
             'message': 'No projects directory found.',
         }
         json_report.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
@@ -181,6 +256,7 @@ def run_check(
                 [],
                 min_md_files=min_md_files,
                 exclude_dirs=exclude_dirs,
+                trend=trend,
             ),
             encoding='utf-8',
         )
@@ -198,6 +274,7 @@ def run_check(
         for p in list_projects(projects_dir, project_glob=project_glob)
     ]
     non_compliant = [r for r in results if not r.ok]
+    trend = summarize_trend(results, baseline_report)
 
     report = {
         'ok': len(non_compliant) == 0,
@@ -210,6 +287,7 @@ def run_check(
         'project_count': len(results),
         'non_compliant_count': len(non_compliant),
         'projects': [asdict(r) for r in results],
+        'trend': trend,
     }
 
     json_report.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
@@ -221,6 +299,7 @@ def run_check(
             results,
             min_md_files=min_md_files,
             exclude_dirs=exclude_dirs,
+            trend=trend,
         ),
         encoding='utf-8',
     )
@@ -234,6 +313,9 @@ def run_check(
                     'non_compliant_count': report['non_compliant_count'],
                     'json_report_path': str(json_report),
                     'markdown_report_path': str(md_report),
+                    'delta_non_compliant': trend.get('delta_non_compliant'),
+                    'improved_projects': trend.get('improved_projects', []),
+                    'regressed_projects': trend.get('regressed_projects', []),
                 },
                 indent=2,
             )
@@ -289,6 +371,12 @@ def build_parser() -> argparse.ArgumentParser:
         help='Glob pattern to select project directories (default: *).',
     )
     parser.add_argument(
+        '--baseline-json',
+        type=Path,
+        default=None,
+        help='Optional baseline JSON report path to compute trend deltas.',
+    )
+    parser.add_argument(
         '--quiet',
         action='store_true',
         help='Suppress JSON summary output to stdout (files are still written).',
@@ -313,6 +401,7 @@ def main() -> int:
         min_md_files=args.min_md_files,
         exclude_dirs=exclude_dirs,
         project_glob=args.project_glob,
+        baseline_json=args.baseline_json,
         emit_summary=not args.quiet,
     )
 

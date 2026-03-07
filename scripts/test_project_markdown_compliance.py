@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 import sys
 import tempfile
 import unittest
@@ -145,6 +146,74 @@ class ProjectMarkdownComplianceTests(unittest.TestCase):
             text = (root / 'report.md').read_text(encoding='utf-8')
             self.assertIn('ai-selected', text)
             self.assertNotIn('web-ignored', text)
+
+    def test_run_check_trend_detects_improvement_against_baseline(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            projects_dir = root / 'projects'
+            project = projects_dir / 'p1'
+            project.mkdir(parents=True)
+            (project / 'README.md').write_text('# ok\n', encoding='utf-8')
+
+            baseline_path = root / 'baseline.json'
+            baseline_path.write_text(
+                json.dumps(
+                    {
+                        'generated_at': '2026-03-01T00:00:00+00:00',
+                        'project_count': 1,
+                        'non_compliant_count': 1,
+                        'projects': [
+                            {
+                                'project': 'p1',
+                                'ok': False,
+                            }
+                        ],
+                    }
+                ),
+                encoding='utf-8',
+            )
+
+            code = run_check(
+                projects_dir=projects_dir,
+                json_report=root / 'report.json',
+                md_report=root / 'report.md',
+                required_files=['README.md'],
+                baseline_json=baseline_path,
+                emit_summary=False,
+            )
+
+            self.assertEqual(code, 0)
+            report = json.loads((root / 'report.json').read_text(encoding='utf-8'))
+            trend = report['trend']
+            self.assertEqual(trend['delta_non_compliant'], -1)
+            self.assertEqual(trend['improved_projects'], ['p1'])
+            self.assertEqual(trend['regressed_projects'], [])
+
+    def test_run_check_invalid_baseline_is_ignored(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            projects_dir = root / 'projects'
+            project = projects_dir / 'p1'
+            project.mkdir(parents=True)
+            (project / 'README.md').write_text('# ok\n', encoding='utf-8')
+
+            baseline_path = root / 'bad-baseline.json'
+            baseline_path.write_text('{not valid json', encoding='utf-8')
+
+            code = run_check(
+                projects_dir=projects_dir,
+                json_report=root / 'report.json',
+                md_report=root / 'report.md',
+                required_files=['README.md'],
+                baseline_json=baseline_path,
+                emit_summary=False,
+            )
+
+            self.assertEqual(code, 0)
+            report = json.loads((root / 'report.json').read_text(encoding='utf-8'))
+            trend = report['trend']
+            self.assertFalse(trend['has_baseline'])
+            self.assertIsNone(trend['delta_non_compliant'])
 
     def test_run_check_can_suppress_stdout_summary(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

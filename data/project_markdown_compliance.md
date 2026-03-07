@@ -1,6 +1,6 @@
 # Project Markdown Compliance Report
 
-- Generated: 2026-03-06T05:16:47.351707+00:00
+- Generated: 2026-03-07T05:17:02.987990+00:00
 - Projects directory: `/home/jpadmin/.openclaw/workspace/projects`
 - Project count: **2**
 - Non-compliant projects: **0**
@@ -25,6 +25,13 @@
 - `dist`
 - `node_modules`
 - `venv`
+
+## Trend vs baseline
+
+- Baseline generated: `2026-03-06T14:45:05.924155+00:00`
+- Non-compliant projects: **0 → 0** (delta: **+0** )
+- Improved projects: —
+- Regressed projects: —
 
 ## Project status
 
