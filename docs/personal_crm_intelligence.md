@@ -108,7 +108,15 @@ Helper scripts added:
 - `scripts/crm_fetch_calendar.py`
 
 ### Required env for gog keyring backend
-If gog keyring password is required in non-interactive runs, set:
+For stable non-interactive runs (cron), pin auth context and keyring inputs:
+- `HOME=/home/jpadmin`
+- `XDG_CONFIG_HOME=/home/jpadmin/.config`
+- `XDG_DATA_HOME=/home/jpadmin/.local/share`
+- `GOG_CLIENT=default`
 - `GOG_KEYRING_PASSWORD`
 
-You can place this in the cron command line or a sourced env file.
+You can place these in the wrapper script or sourced env file.
+
+### Auth hardening behavior
+`personal_crm_intelligence.py` now performs a Gmail/Calendar preflight auth check before ingestion.
+If auth decryption fails (e.g. `aes.KeyUnwrap(): integrity check failed`), the run records concise issue notes in report JSON (`issue_notes`) and prints one `issue_note` line in stdout summary for faster diagnosis.

@@ -509,7 +509,11 @@ def load_json_records(path: str) -> List[Dict[str, Any]]:
 def load_command_records(cmd: str) -> List[Dict[str, Any]]:
     if not cmd.strip():
         return []
-    out = subprocess.check_output(cmd, shell=True, text=True)
+    p = subprocess.run(cmd, shell=True, text=True, capture_output=True)
+    if p.returncode != 0:
+        err = (p.stderr or p.stdout or "command failed").strip()
+        raise RuntimeError(err)
+    out = p.stdout
     data = json.loads(out)
     if isinstance(data, dict):
         for k in ("messages", "emails", "events", "items", "data"):
@@ -664,27 +668,89 @@ def maybe_notify(cfg: Dict[str, Any], msg: str) -> None:
         pass
 
 
+def preflight_auth_checks(cfg: Dict[str, Any]) -> List[str]:
+    account = str(cfg.get("account") or "jacquespayne.9914@gmail.com")
+    client = os.getenv("GOG_CLIENT", "default")
+    checks = [
+        [
+            "gog",
+            "gmail",
+            "search",
+            "newer_than:1d",
+            "--account",
+            account,
+            "--client",
+            client,
+            "--max",
+            "1",
+            "--json",
+            "--no-input",
+        ],
+        [
+            "gog",
+            "calendar",
+            "events",
+            "primary",
+            "--account",
+            account,
+            "--client",
+            client,
+            "--from",
+            dt.datetime.now(dt.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0).isoformat().replace("+00:00", "Z"),
+            "--to",
+            (dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).isoformat().replace("+00:00", "Z"),
+            "--max",
+            "1",
+            "--json",
+            "--no-input",
+        ],
+    ]
+
+    problems: List[str] = []
+    for cmd in checks:
+        p = subprocess.run(cmd, text=True, capture_output=True)
+        if p.returncode != 0:
+            err = (p.stderr or p.stdout or "auth check failed").strip().splitlines()[-1]
+            if "aes.KeyUnwrap" in (p.stderr or "") + (p.stdout or ""):
+                problems.append(
+                    "google_token_decrypt_failed: keyring mismatch/corrupt token; run gog auth remove+add with --client default in pinned HOME/XDG context"
+                )
+            else:
+                problems.append(f"auth_preflight_failed: {' '.join(cmd[:4])} :: {err}")
+    return problems
+
+
 def run_ingest() -> int:
     cfg = load_cfg()
     conn = db()
     init_schema(conn)
 
     issues = 0
+    issue_notes: List[str] = []
+
+    # Preflight auth checks to fail fast with actionable errors.
+    preflight_problems = preflight_auth_checks(cfg)
+    if preflight_problems:
+        issues += len(preflight_problems)
+        issue_notes.extend(preflight_problems)
+
     # Data ingestion source order: command first (live), then json fallback
     emails = []
     cals = []
 
     try:
         emails = load_command_records(cfg.get("email_command", ""))
-    except Exception:
+    except Exception as e:
         issues += 1
+        issue_notes.append(f"email_fetch_failed: {str(e)[:220]}")
     if not emails:
         emails = load_json_records(cfg.get("email_json_path", ""))
 
     try:
         cals = load_command_records(cfg.get("calendar_command", ""))
-    except Exception:
+    except Exception as e:
         issues += 1
+        issue_notes.append(f"calendar_fetch_failed: {str(e)[:220]}")
     if not cals:
         cals = load_json_records(cfg.get("calendar_json_path", ""))
 
@@ -758,6 +824,7 @@ def run_ingest() -> int:
         "merges": merges,
         "rejected": rejected,
         "issues": issues,
+        "issue_notes": issue_notes[:10],
         "shadow_mode": shadow_mode,
         "shadow_approved": shadow_approved,
         "anomaly": anomaly,
@@ -793,6 +860,8 @@ def run_ingest() -> int:
         f"- issues: {issues}\n"
         f"- report: {rpt}"
     )
+    if issue_notes:
+        msg += f"\n- issue_note: {issue_notes[0]}"
     print(msg)
     maybe_notify(cfg, msg)
     return 0
