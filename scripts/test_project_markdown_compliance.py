@@ -236,6 +236,38 @@ class ProjectMarkdownComplianceTests(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertEqual(buf.getvalue(), '')
 
+    def test_run_check_emits_missing_requirement_frequency_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            projects_dir = root / 'projects'
+            projects_dir.mkdir(parents=True)
+
+            p1 = projects_dir / 'p1'
+            p1.mkdir()
+            (p1 / 'README.md').write_text('# ok\n', encoding='utf-8')
+
+            p2 = projects_dir / 'p2'
+            p2.mkdir()
+
+            run_check(
+                projects_dir=projects_dir,
+                json_report=root / 'report.json',
+                md_report=root / 'report.md',
+                required_files=['README.md', 'docs/roadmap.md'],
+                emit_summary=False,
+            )
+
+            report = json.loads((root / 'report.json').read_text(encoding='utf-8'))
+            self.assertIn('missing_required_frequency', report)
+            self.assertEqual(
+                report['missing_required_frequency'][0],
+                {'requirement': 'docs/roadmap.md', 'missing_in_projects': 2},
+            )
+
+            md_text = (root / 'report.md').read_text(encoding='utf-8')
+            self.assertIn('## Most commonly missing requirements', md_text)
+            self.assertIn('`docs/roadmap.md` missing in **2** project(s)', md_text)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -13,6 +13,9 @@ This workspace includes a documentation compliance checker at:
 - Generates:
   - machine-readable JSON report
   - human-readable markdown report
+- Adds gap analytics:
+  - JSON `missing_required_frequency` list (sorted by most-missing requirement)
+  - Markdown section `Most commonly missing requirements`
 
 Default outputs:
 

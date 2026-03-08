@@ -155,6 +155,20 @@ def summarize_trend(current_results: list[ProjectCompliance], baseline_report: d
     }
 
 
+def summarize_missing_requirements(results: list[ProjectCompliance]) -> list[dict[str, Any]]:
+    counts: dict[str, int] = {}
+    for row in results:
+        for missing in row.missing_required:
+            counts[missing] = counts.get(missing, 0) + 1
+
+    summary = [
+        {'requirement': requirement, 'missing_in_projects': count}
+        for requirement, count in counts.items()
+    ]
+    summary.sort(key=lambda x: (-x['missing_in_projects'], x['requirement']))
+    return summary
+
+
 def build_markdown_report(
     generated_at: str,
     projects_dir: Path,
@@ -163,6 +177,7 @@ def build_markdown_report(
     min_md_files: int,
     exclude_dirs: set[str],
     trend: dict[str, Any] | None = None,
+    missing_summary: list[dict[str, Any]] | None = None,
 ) -> str:
     non_compliant = [r for r in results if not r.ok]
     lines = [
@@ -196,6 +211,13 @@ def build_markdown_report(
         regressed = trend.get('regressed_projects') or []
         lines.append(f"- Improved projects: {', '.join(f'`{p}`' for p in improved) if improved else '—'}")
         lines.append(f"- Regressed projects: {', '.join(f'`{p}`' for p in regressed) if regressed else '—'}")
+
+    if missing_summary:
+        lines.extend(['', '## Most commonly missing requirements', ''])
+        for row in missing_summary:
+            lines.append(
+                f"- `{row['requirement']}` missing in **{row['missing_in_projects']}** project(s)"
+            )
 
     lines.extend(['', '## Project status', ''])
 
@@ -235,6 +257,7 @@ def run_check(
 
     if not projects_dir.exists():
         trend = summarize_trend([], baseline_report)
+        missing_summary = summarize_missing_requirements([])
         report = {
             'ok': True,
             'generated_at': generated_at,
@@ -245,6 +268,7 @@ def run_check(
             'exclude_dirs': sorted(exclude_dirs),
             'projects': [],
             'trend': trend,
+            'missing_required_frequency': missing_summary,
             'message': 'No projects directory found.',
         }
         json_report.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
@@ -257,6 +281,7 @@ def run_check(
                 min_md_files=min_md_files,
                 exclude_dirs=exclude_dirs,
                 trend=trend,
+                missing_summary=missing_summary,
             ),
             encoding='utf-8',
         )
@@ -275,6 +300,7 @@ def run_check(
     ]
     non_compliant = [r for r in results if not r.ok]
     trend = summarize_trend(results, baseline_report)
+    missing_summary = summarize_missing_requirements(results)
 
     report = {
         'ok': len(non_compliant) == 0,
@@ -288,6 +314,7 @@ def run_check(
         'non_compliant_count': len(non_compliant),
         'projects': [asdict(r) for r in results],
         'trend': trend,
+        'missing_required_frequency': missing_summary,
     }
 
     json_report.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
@@ -300,6 +327,7 @@ def run_check(
             min_md_files=min_md_files,
             exclude_dirs=exclude_dirs,
             trend=trend,
+            missing_summary=missing_summary,
         ),
         encoding='utf-8',
     )

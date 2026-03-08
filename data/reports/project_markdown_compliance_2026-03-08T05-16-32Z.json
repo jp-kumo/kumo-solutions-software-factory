@@ -1,0 +1,59 @@
+{
+  "ok": true,
+  "generated_at": "2026-03-08T05:16:32.591330+00:00",
+  "projects_dir": "/home/jpadmin/.openclaw/workspace/projects",
+  "project_glob": "*",
+  "required_files": [
+    "README.md",
+    "docs/decisions.md",
+    "docs/roadmap.md",
+    "docs/security-notes.md",
+    "docs/changelog.md"
+  ],
+  "min_md_files": 1,
+  "exclude_dirs": [
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "node_modules",
+    "venv"
+  ],
+  "project_count": 2,
+  "non_compliant_count": 0,
+  "projects": [
+    {
+      "project": "cobol-modernization-bridge",
+      "md_count": 8,
+      "missing_required": [],
+      "present_required_count": 5,
+      "required_total": 5,
+      "required_coverage_pct": 100.0,
+      "ok": true
+    },
+    {
+      "project": "secure-health-rag-reference",
+      "md_count": 5,
+      "missing_required": [],
+      "present_required_count": 5,
+      "required_total": 5,
+      "required_coverage_pct": 100.0,
+      "ok": true
+    }
+  ],
+  "trend": {
+    "has_baseline": true,
+    "baseline_generated_at": "2026-03-07T14:45:03.367419+00:00",
+    "baseline_project_count": 2,
+    "baseline_non_compliant_count": 0,
+    "current_non_compliant_count": 0,
+    "delta_non_compliant": 0,
+    "improved_projects": [],
+    "regressed_projects": [],
+    "unchanged_projects_count": 2
+  },
+  "missing_required_frequency": []
+}

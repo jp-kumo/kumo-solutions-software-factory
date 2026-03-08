@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "project_count": 2,
+  "non_compliant_count": 0,
+  "json_report_path": "data/reports/project_markdown_compliance_2026-03-08T05-16-32Z.json",
+  "markdown_report_path": "data/reports/project_markdown_compliance_2026-03-08T05-16-32Z.md",
+  "delta_non_compliant": 0,
+  "improved_projects": [],
+  "regressed_projects": []
+}
