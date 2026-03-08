@@ -7,6 +7,7 @@ import subprocess
 from typing import Any, Dict, List
 
 ACCOUNT = "jacquespayne.9914@gmail.com"
+CLIENT = "default"
 
 
 def listify(x: Any) -> List[Dict[str, Any]]:
@@ -38,6 +39,8 @@ def main() -> int:
         "primary",
         "--account",
         ACCOUNT,
+        "--client",
+        CLIENT,
         "--from",
         start,
         "--to",
