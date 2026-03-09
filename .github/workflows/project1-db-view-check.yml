@@ -1,0 +1,37 @@
+name: project1-db-view-check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "20 6 * * *"
+
+jobs:
+  verify-reporting-views:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install psycopg[binary]
+
+      - name: Run DB view check
+        env:
+          DB_VIEW_CHECK_DSN: ${{ secrets.PROJECT1_DB_VIEW_CHECK_DSN }}
+        run: |
+          test -n "$DB_VIEW_CHECK_DSN" || (echo "Missing secret PROJECT1_DB_VIEW_CHECK_DSN" && exit 2)
+          bash coding-factory/runtime/project-1/mission-control-v1/scripts/run_db_view_check.sh
+
+      - name: Upload report artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mission-control-db-view-check
+          path: data/reports/mission-control-db-view-check-*.json
