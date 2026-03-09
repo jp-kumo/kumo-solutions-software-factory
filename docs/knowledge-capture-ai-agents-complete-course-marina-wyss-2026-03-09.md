@@ -29,6 +29,25 @@
 4. Treat evaluation as a first-class component in multi-agent systems.
 5. Design production systems for reliability, observability, and failure handling.
 
+## Additional key points (follow-up excerpt)
+- Agent fit is strongest for tasks requiring iteration, research, and multi-step reasoning.
+- Use-case stratification proposed from simple to complex:
+  - invoice extraction to database (low ambiguity)
+  - customer email drafting with lookup + human review
+  - full customer support flows with policy and process reasoning
+- Decision framework: evaluate use cases by **complexity** and **precision requirement**.
+  - High-complexity / lower-precision tasks are often good initial adoption targets.
+- Autonomy spectrum:
+  - scripted (deterministic)
+  - semi-autonomous (guardrailed tool-choice)
+  - highly autonomous (model plans and executes broadly)
+- Practical recommendation: most production systems should be semi-autonomous with explicit guardrails.
+- Context engineering is highlighted as core reliability lever:
+  - task background
+  - role framing
+  - memory of prior actions
+  - available tools and constraints
+
 ## Raw excerpt (as received)
 
 AI Agents: Complete Course
@@ -40,3 +59,7 @@ If you’ve been paying attention to AI in 2025, you’ve probably noticed that 
 This is what people call the ReAct loop. The model reasons about what to do next, acts (often by calling a tool), observes the result, then either gives you an answer or loops back to reason again.
 ...
 This works because each pass adds depth. You get stronger reasoning, fewer hallucinations, and better organization, which is all the stuff that gets lost when you try to do everything in one shot.
+
+[Follow-up excerpt captured]
+This approach works well anywhere you need careful, accurate work with proper sourcing...
+...Context engineering includes task background, role, memory, and tool availability; this context steers non-deterministic models toward consistent outputs.
