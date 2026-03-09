@@ -25,6 +25,8 @@ jobs:
       - name: Run DB view check
         env:
           DB_VIEW_CHECK_DSN: ${{ secrets.PROJECT1_DB_VIEW_CHECK_DSN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.PROJECT1_ALERT_TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.PROJECT1_ALERT_TELEGRAM_CHAT_ID }}
         run: |
           test -n "$DB_VIEW_CHECK_DSN" || (echo "Missing secret PROJECT1_DB_VIEW_CHECK_DSN" && exit 2)
           bash coding-factory/runtime/project-1/mission-control-v1/scripts/run_db_view_check.sh

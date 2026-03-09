@@ -45,5 +45,9 @@ Wrapper output behavior:
 
 ## CI/Nightly Gate
 - GitHub Actions workflow added: `.github/workflows/project1-db-view-check.yml`
-- Requires secret: `PROJECT1_DB_VIEW_CHECK_DSN`
+- Required secret: `PROJECT1_DB_VIEW_CHECK_DSN`
+- Optional alert secrets (Telegram-ready):
+  - `PROJECT1_ALERT_TELEGRAM_BOT_TOKEN`
+  - `PROJECT1_ALERT_TELEGRAM_CHAT_ID`
 - Any missing/unqueryable required view returns exit code `1`, which fails the job.
+- Wrapper emits an alert text artifact per run (`mission-control-db-view-alert-<timestamp>.txt`) and sends Telegram alert when optional secrets are configured.
