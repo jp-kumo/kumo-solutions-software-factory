@@ -48,6 +48,50 @@
   - memory of prior actions
   - available tools and constraints
 
+## Additional key points (advanced excerpt)
+- Task decomposition is framed as the highest-leverage design step:
+  - start from human workflow
+  - map each step to LLM/code/API
+  - split until each step is small, clear, and testable
+- Evaluation is positioned as core engineering discipline:
+  - component-level + end-to-end scoring
+  - trace analysis of intermediate steps for root-cause debugging
+  - start simple, iterate continuously
+- Memory design distinction:
+  - short-term/working memory for run state
+  - long-term memory for lessons learned and iterative improvement
+  - static knowledge base for references/docs/data sources
+- Guardrails stack recommendation:
+  - deterministic code-based checks (format, length, schema)
+  - LLM-as-judge for nuanced quality checks
+  - human approval for high-risk outputs
+- Four quality patterns emphasized:
+  - reflection
+  - tool use
+  - planning
+  - multi-agent collaboration
+- Tooling architecture and function-call loop clarified:
+  - LLM requests tool calls; external runtime executes
+  - tool interface quality (name/description/schema) is critical
+  - least-privilege tools + error handling + rate limits + caching
+- Planning is highlighted as dynamic plan→act→observe orchestration with higher autonomy tradeoffs.
+- Multi-agent design patterns covered:
+  - sequential
+  - parallel
+  - manager hierarchy
+  - all-to-all (high-chaos/low-control)
+- Advanced production concerns:
+  - latency optimization (parallelization, model tiering, context trimming)
+  - cost optimization (bucket analysis, caching, batching, output constraints)
+  - observability (zoom-in traces + zoom-out quality trends)
+  - security (prompt injection, unsafe code execution, data leakage, resource exhaustion)
+- Safe code-execution controls called out:
+  - sandboxing/container isolation
+  - strict resource limits
+  - library allowlists
+  - deterministic I/O
+  - circuit breakers + sanitization
+
 ## Raw excerpt (as received)
 
 AI Agents: Complete Course
