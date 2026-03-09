@@ -169,6 +169,23 @@ def summarize_missing_requirements(results: list[ProjectCompliance]) -> list[dic
     return summary
 
 
+def append_history(history_json: Path, row: dict[str, Any], max_history: int) -> None:
+    history_json.parent.mkdir(parents=True, exist_ok=True)
+    history: list[dict[str, Any]] = []
+    if history_json.exists() and history_json.is_file():
+        try:
+            loaded = json.loads(history_json.read_text(encoding='utf-8'))
+            if isinstance(loaded, list):
+                history = [x for x in loaded if isinstance(x, dict)]
+        except json.JSONDecodeError:
+            history = []
+
+    history.append(row)
+    if max_history > 0:
+        history = history[-max_history:]
+    history_json.write_text(json.dumps(history, indent=2) + '\n', encoding='utf-8')
+
+
 def build_markdown_report(
     generated_at: str,
     projects_dir: Path,
@@ -247,6 +264,9 @@ def run_check(
     exclude_dirs: set[str] | None = None,
     project_glob: str = '*',
     baseline_json: Path | None = None,
+    fail_on_regression: bool = False,
+    history_json: Path | None = None,
+    max_history: int = 200,
     emit_summary: bool = True,
 ) -> int:
     generated_at = datetime.now(timezone.utc).isoformat()
@@ -258,6 +278,7 @@ def run_check(
     if not projects_dir.exists():
         trend = summarize_trend([], baseline_report)
         missing_summary = summarize_missing_requirements([])
+        regression_detected = bool(trend.get('regressed_projects')) if trend else False
         report = {
             'ok': True,
             'generated_at': generated_at,
@@ -269,6 +290,7 @@ def run_check(
             'projects': [],
             'trend': trend,
             'missing_required_frequency': missing_summary,
+            'regression_detected': regression_detected,
             'message': 'No projects directory found.',
         }
         json_report.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
@@ -285,6 +307,19 @@ def run_check(
             ),
             encoding='utf-8',
         )
+        if history_json:
+            append_history(
+                history_json,
+                {
+                    'generated_at': generated_at,
+                    'project_count': 0,
+                    'non_compliant_count': 0,
+                    'ok': True,
+                    'regression_detected': regression_detected,
+                    'delta_non_compliant': trend.get('delta_non_compliant') if trend else None,
+                },
+                max_history=max_history,
+            )
         if emit_summary:
             print(json.dumps({'ok': True, 'project_count': 0, 'non_compliant_count': 0}, indent=2))
         return 0
@@ -302,6 +337,7 @@ def run_check(
     trend = summarize_trend(results, baseline_report)
     missing_summary = summarize_missing_requirements(results)
 
+    regression_detected = bool(trend.get('regressed_projects')) if trend else False
     report = {
         'ok': len(non_compliant) == 0,
         'generated_at': generated_at,
@@ -315,6 +351,7 @@ def run_check(
         'projects': [asdict(r) for r in results],
         'trend': trend,
         'missing_required_frequency': missing_summary,
+        'regression_detected': regression_detected,
     }
 
     json_report.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
@@ -332,6 +369,20 @@ def run_check(
         encoding='utf-8',
     )
 
+    if history_json:
+        append_history(
+            history_json,
+            {
+                'generated_at': generated_at,
+                'project_count': report['project_count'],
+                'non_compliant_count': report['non_compliant_count'],
+                'ok': report['ok'],
+                'regression_detected': regression_detected,
+                'delta_non_compliant': trend.get('delta_non_compliant'),
+            },
+            max_history=max_history,
+        )
+
     if emit_summary:
         print(
             json.dumps(
@@ -344,11 +395,15 @@ def run_check(
                     'delta_non_compliant': trend.get('delta_non_compliant'),
                     'improved_projects': trend.get('improved_projects', []),
                     'regressed_projects': trend.get('regressed_projects', []),
+                    'regression_detected': regression_detected,
+                    'fail_on_regression': fail_on_regression,
                 },
                 indent=2,
             )
         )
 
+    if fail_on_regression and regression_detected:
+        return 3
     return 0 if report['ok'] else 2
 
 
@@ -405,6 +460,23 @@ def build_parser() -> argparse.ArgumentParser:
         help='Optional baseline JSON report path to compute trend deltas.',
     )
     parser.add_argument(
+        '--fail-on-regression',
+        action='store_true',
+        help='Return exit code 3 when baseline comparison detects any regressed project.',
+    )
+    parser.add_argument(
+        '--history-json',
+        type=Path,
+        default=None,
+        help='Optional path to append compact run history rows for trend tracking.',
+    )
+    parser.add_argument(
+        '--max-history',
+        type=int,
+        default=200,
+        help='Maximum number of history rows retained when --history-json is used (default: 200).',
+    )
+    parser.add_argument(
         '--quiet',
         action='store_true',
         help='Suppress JSON summary output to stdout (files are still written).',
@@ -420,6 +492,8 @@ def main() -> int:
 
     if args.min_md_files < 0:
         parser.error('--min-md-files must be >= 0')
+    if args.max_history < 0:
+        parser.error('--max-history must be >= 0')
 
     return run_check(
         projects_dir=args.projects_dir,
@@ -430,6 +504,9 @@ def main() -> int:
         exclude_dirs=exclude_dirs,
         project_glob=args.project_glob,
         baseline_json=args.baseline_json,
+        fail_on_regression=args.fail_on_regression,
+        history_json=args.history_json,
+        max_history=args.max_history,
         emit_summary=not args.quiet,
     )
 

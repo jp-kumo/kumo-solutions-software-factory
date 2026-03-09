@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generated_at": "2026-03-07T05:17:02.987990+00:00",
+  "generated_at": "2026-03-09T04:17:34.463850+00:00",
   "projects_dir": "/home/jpadmin/.openclaw/workspace/projects",
   "project_glob": "*",
   "required_files": [
@@ -45,14 +45,16 @@
     }
   ],
   "trend": {
-    "has_baseline": true,
-    "baseline_generated_at": "2026-03-06T14:45:05.924155+00:00",
-    "baseline_project_count": 2,
-    "baseline_non_compliant_count": 0,
+    "has_baseline": false,
+    "baseline_generated_at": null,
+    "baseline_project_count": null,
+    "baseline_non_compliant_count": null,
     "current_non_compliant_count": 0,
-    "delta_non_compliant": 0,
+    "delta_non_compliant": null,
     "improved_projects": [],
     "regressed_projects": [],
-    "unchanged_projects_count": 2
-  }
+    "unchanged_projects_count": 0
+  },
+  "missing_required_frequency": [],
+  "regression_detected": false
 }

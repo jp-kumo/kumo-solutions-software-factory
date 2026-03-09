@@ -10,6 +10,8 @@ This workspace includes a documentation compliance checker at:
 - Verifies required docs exist (README + key docs under `docs/`)
 - Supports an optional minimum markdown-file threshold per project
 - Excludes noisy directories from markdown counts (`node_modules`, `.git`, `__pycache__`, etc.)
+- Supports baseline comparison and optional regression gating (`--baseline-json`, `--fail-on-regression`)
+- Can append compact time-series run history for dashboards/automation (`--history-json`)
 - Generates:
   - machine-readable JSON report
   - human-readable markdown report
@@ -50,6 +52,16 @@ python3 scripts/check_project_markdown_compliance.py \
   --min-md-files 5 \
   --exclude-dirs ".git,node_modules,__pycache__,.venv,dist,build"
 
+# Compare against a baseline snapshot and fail if any previously-compliant project regressed
+python3 scripts/check_project_markdown_compliance.py \
+  --baseline-json data/project_markdown_compliance.baseline.json \
+  --fail-on-regression
+
+# Append compact run history (trimmed to last 120 rows)
+python3 scripts/check_project_markdown_compliance.py \
+  --history-json data/project_markdown_compliance.history.json \
+  --max-history 120
+
 # Quiet mode for cron/automation (reports still written, stdout suppressed)
 python3 scripts/check_project_markdown_compliance.py --quiet
 ```
@@ -58,3 +70,4 @@ Exit code:
 
 - `0` when all projects are compliant (or no projects directory exists)
 - `2` when one or more projects are missing required files
+- `3` when `--fail-on-regression` is enabled and baseline diff detects one or more regressed projects

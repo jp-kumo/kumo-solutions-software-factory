@@ -268,6 +268,74 @@ class ProjectMarkdownComplianceTests(unittest.TestCase):
             self.assertIn('## Most commonly missing requirements', md_text)
             self.assertIn('`docs/roadmap.md` missing in **2** project(s)', md_text)
 
+    def test_run_check_fail_on_regression_returns_3(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            projects_dir = root / 'projects'
+            project = projects_dir / 'p1'
+            project.mkdir(parents=True)
+
+            baseline_path = root / 'baseline.json'
+            baseline_path.write_text(
+                json.dumps(
+                    {
+                        'generated_at': '2026-03-01T00:00:00+00:00',
+                        'project_count': 1,
+                        'non_compliant_count': 0,
+                        'projects': [{'project': 'p1', 'ok': True}],
+                    }
+                ),
+                encoding='utf-8',
+            )
+
+            code = run_check(
+                projects_dir=projects_dir,
+                json_report=root / 'report.json',
+                md_report=root / 'report.md',
+                required_files=['README.md'],
+                baseline_json=baseline_path,
+                fail_on_regression=True,
+                emit_summary=False,
+            )
+
+            self.assertEqual(code, 3)
+            report = json.loads((root / 'report.json').read_text(encoding='utf-8'))
+            self.assertTrue(report['regression_detected'])
+
+    def test_run_check_appends_history_rows(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            projects_dir = root / 'projects'
+            project = projects_dir / 'p1'
+            project.mkdir(parents=True)
+            (project / 'README.md').write_text('# ok\n', encoding='utf-8')
+
+            history_path = root / 'history.json'
+
+            run_check(
+                projects_dir=projects_dir,
+                json_report=root / 'r1.json',
+                md_report=root / 'r1.md',
+                required_files=['README.md'],
+                history_json=history_path,
+                max_history=1,
+                emit_summary=False,
+            )
+            run_check(
+                projects_dir=projects_dir,
+                json_report=root / 'r2.json',
+                md_report=root / 'r2.md',
+                required_files=['README.md'],
+                history_json=history_path,
+                max_history=1,
+                emit_summary=False,
+            )
+
+            history = json.loads(history_path.read_text(encoding='utf-8'))
+            self.assertEqual(len(history), 1)
+            self.assertEqual(history[0]['project_count'], 1)
+            self.assertTrue(history[0]['ok'])
+
 
 if __name__ == '__main__':
     unittest.main()
