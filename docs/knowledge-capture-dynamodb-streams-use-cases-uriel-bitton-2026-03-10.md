@@ -36,6 +36,22 @@ DynamoDB Streams can be used as a core event source to decouple services and tri
   - workflow orchestration
 - Avoid inline API coupling by moving side effects to stream consumers
 
+**Example flow (continued excerpt):**
+- New item write (e.g., `orderCreated`, `postPublished`)
+- Stream captures INSERT event
+- One or more Lambda consumers react
+- Consumers can:
+  - send in-app notifications
+  - publish to EventBridge
+  - queue expensive work via SQS
+- Each consumer has a single responsibility, with isolated/retryable failures
+
+**Common event-driven patterns highlighted:**
+- fan-out to multiple downstream services
+- conditional branching by item attributes
+- async processing for expensive workloads
+- orchestration without tight coupling
+
 ## Implementation checklist (practical)
 1. Enable stream view type that fits workload (NEW_IMAGE / OLD_IMAGE / NEW_AND_OLD_IMAGES).
 2. Use idempotency keys in consumers to handle retries safely.
@@ -50,3 +66,6 @@ This maps directly to cloud architecture competency:
 - reliability engineering
 - compliance logging and auditability
 - scalable async integrations
+
+## Closing takeaway from source
+Designing around data events (instead of periodic querying) improves architectural simplicity, scalability, and resilience.
