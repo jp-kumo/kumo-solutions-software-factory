@@ -336,6 +336,33 @@ class ProjectMarkdownComplianceTests(unittest.TestCase):
             self.assertEqual(history[0]['project_count'], 1)
             self.assertTrue(history[0]['ok'])
 
+    def test_run_check_writes_history_markdown_dashboard(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            projects_dir = root / 'projects'
+            project = projects_dir / 'p1'
+            project.mkdir(parents=True)
+            (project / 'README.md').write_text('# ok\n', encoding='utf-8')
+
+            history_path = root / 'history.json'
+            history_md_path = root / 'history.md'
+
+            run_check(
+                projects_dir=projects_dir,
+                json_report=root / 'r1.json',
+                md_report=root / 'r1.md',
+                required_files=['README.md'],
+                history_json=history_path,
+                history_md_report=history_md_path,
+                history_md_max_rows=10,
+                emit_summary=False,
+            )
+
+            self.assertTrue(history_md_path.exists())
+            text = history_md_path.read_text(encoding='utf-8')
+            self.assertIn('# Project Markdown Compliance History', text)
+            self.assertIn('| Generated At (UTC) | Projects | Non-compliant | Delta vs baseline | Regression |', text)
+
 
 if __name__ == '__main__':
     unittest.main()

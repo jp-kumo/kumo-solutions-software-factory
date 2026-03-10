@@ -13,6 +13,7 @@ DEFAULT_PROJECTS_DIR = DEFAULT_WORKSPACE / 'projects'
 DEFAULT_DATA_DIR = DEFAULT_WORKSPACE / 'data'
 DEFAULT_JSON_REPORT = DEFAULT_DATA_DIR / 'project_markdown_compliance.json'
 DEFAULT_MD_REPORT = DEFAULT_DATA_DIR / 'project_markdown_compliance.md'
+DEFAULT_HISTORY_MD_REPORT = DEFAULT_DATA_DIR / 'project_markdown_compliance_history.md'
 
 DEFAULT_REQUIRED_FILES = [
     'README.md',
@@ -169,21 +170,74 @@ def summarize_missing_requirements(results: list[ProjectCompliance]) -> list[dic
     return summary
 
 
+def load_history_rows(history_json: Path | None) -> list[dict[str, Any]]:
+    if not history_json:
+        return []
+    if not history_json.exists() or not history_json.is_file():
+        return []
+    try:
+        loaded = json.loads(history_json.read_text(encoding='utf-8'))
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(loaded, list):
+        return []
+    return [x for x in loaded if isinstance(x, dict)]
+
+
 def append_history(history_json: Path, row: dict[str, Any], max_history: int) -> None:
     history_json.parent.mkdir(parents=True, exist_ok=True)
-    history: list[dict[str, Any]] = []
-    if history_json.exists() and history_json.is_file():
-        try:
-            loaded = json.loads(history_json.read_text(encoding='utf-8'))
-            if isinstance(loaded, list):
-                history = [x for x in loaded if isinstance(x, dict)]
-        except json.JSONDecodeError:
-            history = []
+    history = load_history_rows(history_json)
 
     history.append(row)
     if max_history > 0:
         history = history[-max_history:]
     history_json.write_text(json.dumps(history, indent=2) + '\n', encoding='utf-8')
+
+
+def build_history_markdown_report(
+    generated_at: str,
+    history_rows: list[dict[str, Any]],
+    max_rows: int = 30,
+) -> str:
+    rows = history_rows[-max_rows:] if max_rows > 0 else history_rows
+    lines = [
+        '# Project Markdown Compliance History',
+        '',
+        f'- Generated: {generated_at}',
+        f'- Total stored runs: **{len(history_rows)}**',
+        f'- Included rows in table: **{len(rows)}**',
+        '',
+    ]
+
+    if not rows:
+        lines.extend(['_No history rows available._', ''])
+        return '\n'.join(lines)
+
+    latest = rows[-1]
+    lines.extend(
+        [
+            '## Latest snapshot',
+            '',
+            f"- Projects checked: **{latest.get('project_count', 'n/a')}**",
+            f"- Non-compliant: **{latest.get('non_compliant_count', 'n/a')}**",
+            f"- Regression detected: **{latest.get('regression_detected', False)}**",
+            '',
+            '## Recent run table',
+            '',
+            '| Generated At (UTC) | Projects | Non-compliant | Delta vs baseline | Regression |',
+            '|---|---:|---:|---:|---|',
+        ]
+    )
+
+    for row in rows:
+        delta = row.get('delta_non_compliant')
+        delta_text = f'{int(delta):+d}' if isinstance(delta, int) else 'n/a'
+        lines.append(
+            f"| {row.get('generated_at', 'n/a')} | {row.get('project_count', 'n/a')} | {row.get('non_compliant_count', 'n/a')} | {delta_text} | {'✅' if row.get('regression_detected') is False else '⚠️'} |"
+        )
+
+    lines.append('')
+    return '\n'.join(lines)
 
 
 def build_markdown_report(
@@ -267,6 +321,8 @@ def run_check(
     fail_on_regression: bool = False,
     history_json: Path | None = None,
     max_history: int = 200,
+    history_md_report: Path | None = None,
+    history_md_max_rows: int = 30,
     emit_summary: bool = True,
 ) -> int:
     generated_at = datetime.now(timezone.utc).isoformat()
@@ -319,6 +375,17 @@ def run_check(
                     'delta_non_compliant': trend.get('delta_non_compliant') if trend else None,
                 },
                 max_history=max_history,
+            )
+        if history_md_report and history_json:
+            history_rows = load_history_rows(history_json)
+            history_md_report.parent.mkdir(parents=True, exist_ok=True)
+            history_md_report.write_text(
+                build_history_markdown_report(
+                    generated_at=generated_at,
+                    history_rows=history_rows,
+                    max_rows=history_md_max_rows,
+                ),
+                encoding='utf-8',
             )
         if emit_summary:
             print(json.dumps({'ok': True, 'project_count': 0, 'non_compliant_count': 0}, indent=2))
@@ -381,6 +448,18 @@ def run_check(
                 'delta_non_compliant': trend.get('delta_non_compliant'),
             },
             max_history=max_history,
+        )
+
+    if history_md_report and history_json:
+        history_rows = load_history_rows(history_json)
+        history_md_report.parent.mkdir(parents=True, exist_ok=True)
+        history_md_report.write_text(
+            build_history_markdown_report(
+                generated_at=generated_at,
+                history_rows=history_rows,
+                max_rows=history_md_max_rows,
+            ),
+            encoding='utf-8',
         )
 
     if emit_summary:
@@ -477,6 +556,18 @@ def build_parser() -> argparse.ArgumentParser:
         help='Maximum number of history rows retained when --history-json is used (default: 200).',
     )
     parser.add_argument(
+        '--history-md-report',
+        type=Path,
+        default=DEFAULT_HISTORY_MD_REPORT,
+        help='Optional markdown dashboard path generated from --history-json rows.',
+    )
+    parser.add_argument(
+        '--history-md-max-rows',
+        type=int,
+        default=30,
+        help='Maximum number of recent rows rendered in --history-md-report (default: 30).',
+    )
+    parser.add_argument(
         '--quiet',
         action='store_true',
         help='Suppress JSON summary output to stdout (files are still written).',
@@ -494,6 +585,8 @@ def main() -> int:
         parser.error('--min-md-files must be >= 0')
     if args.max_history < 0:
         parser.error('--max-history must be >= 0')
+    if args.history_md_max_rows < 0:
+        parser.error('--history-md-max-rows must be >= 0')
 
     return run_check(
         projects_dir=args.projects_dir,
@@ -507,6 +600,8 @@ def main() -> int:
         fail_on_regression=args.fail_on_regression,
         history_json=args.history_json,
         max_history=args.max_history,
+        history_md_report=args.history_md_report,
+        history_md_max_rows=args.history_md_max_rows,
         emit_summary=not args.quiet,
     )
 
