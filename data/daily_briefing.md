@@ -1,3 +1,8 @@
+# Daily Briefing
+
+Generated: 2026-03-11 18:52 UTC
+
+### Markdown compliance
 ## 7-day trend summary
 
 - Runs analyzed: **5**
@@ -5,3 +10,4 @@
 - Best compliant streak (0 non-compliant): **5** runs
 - Worst non-compliant streak (>0 non-compliant): **0** runs
 - Latest run: non-compliant=**0**, project_count=**2**
+

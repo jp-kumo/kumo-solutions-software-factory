@@ -14,6 +14,7 @@ Implements three operational improvements:
 - `data/project_markdown_compliance_history.md`
 - `data/project_markdown_compliance_history_7day.md`
 - `data/project_markdown_compliance_morning_snippet.md`
+- `data/daily_briefing.md` (consolidated briefing output)
 
 ## Recommended cron command
 ```bash
@@ -21,7 +22,11 @@ bash /home/jpadmin/.openclaw/workspace/scripts/run_project_markdown_compliance_n
 ```
 
 ## Morning digest integration
-If your morning summary script supports markdown includes/snippets, include:
-- `data/project_markdown_compliance_morning_snippet.md`
+Nightly wrapper now refreshes a consolidated briefing file via:
+- `scripts/build_daily_briefing.sh`
 
-This snippet is regenerated on every nightly wrapper run.
+Outputs:
+- `data/project_markdown_compliance_morning_snippet.md` (section snippet)
+- `data/daily_briefing.md` (ready-to-consume briefing document)
+
+This keeps markdown compliance signal wired into the daily briefing pipeline automatically.

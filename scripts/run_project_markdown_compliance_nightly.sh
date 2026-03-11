@@ -50,6 +50,11 @@ fi
   fi
 } > "$MORNING_SNIPPET"
 
+# Refresh consolidated daily briefing output.
+if [[ -x "$ROOT/scripts/build_daily_briefing.sh" ]]; then
+  "$ROOT/scripts/build_daily_briefing.sh"
+fi
+
 echo "Updated: $HISTORY_JSON"
 echo "Updated: $HISTORY_MD"
 echo "Updated: $HISTORY_SUMMARY_MD"
