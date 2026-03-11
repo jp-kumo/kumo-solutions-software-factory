@@ -1,11 +1,12 @@
 # Current Access Map (2026-03-11)
 
-## Confirmed Git repository remote
-- `openclaw-mission-control`
-  - `https://github.com/abhi1693/openclaw-mission-control.git` (fetch/push)
+## Confirmed Git repository remotes
+- Workspace (`/home/jpadmin/.openclaw/workspace`)
+  - `origin`: `https://github.com/jp-kumo/kumo-solutions-software-factory.git` (fetch/push)
 
-## Main workspace Git remote status
-- Workspace repo at `/home/jpadmin/.openclaw/workspace` currently has **no remote configured**.
+- `openclaw-mission-control` (`/home/jpadmin/.openclaw/workspace/openclaw-mission-control`)
+  - `origin`: `https://github.com/jp-kumo/kumo-solutions-mission-control.git` (fetch/push)
+  - `upstream`: `https://github.com/abhi1693/openclaw-mission-control.git` (fetch/push)
 
 ## OpenClaw documentation and ecosystem URLs
 - OpenClaw docs: `https://docs.openclaw.ai`
