@@ -19,3 +19,7 @@ Automatic operating checklist after context resets/compactions.
 - Use checkpoint commit before non-trivial edits.
 - Keep secrets out of chat and out of committed files.
 - For memory/history questions, run `memory_search` first.
+
+## Nightly helper
+- Use `python3 scripts/nightly_git_report.py --root /home/jpadmin/.openclaw/workspace` to generate a quick multi-repo git health snapshot (dirty/staged/unstaged/untracked + ahead/behind).
+- Add `--json` when another tool or script needs machine-readable output.
