@@ -73,64 +73,86 @@ Many firms have principles but no operating mechanism to execute and enforce the
 ### Build
 - Draft Responsible AI policy with enforceable principles (fairness, accountability, transparency, safety, privacy).
 - Design intake-to-approval workflow for new AI use cases.
-- Define role/RACI model, review cadence, escalation path, incident handling.
-- Add policy-to-control traceability matrix.
+- Define role/RACI model, review cadence, escalation path, and operating controls.
+- Include a simple governance operating model diagram that explicitly shows:
+  - who owns AI oversight (committee/function),
+  - how legal, risk, security, and engineering interact,
+  - where approvals and escalations occur.
+- Add policy-to-control traceability matrix tied to NIST AI RMF Govern function.
 
 ### Measurable impact
 - policy control coverage
 - approval SLA
-- incident escalation response time target
+- review cadence adherence
+- escalation response time target
 
 ### Stack
-- policy docs + workflow diagrams + control matrix + automated checklist generator
+- policy docs + workflow diagrams + operating model/RACI + control matrix + automated checklist generator
 
 ### Role relevance
 - AI governance architect, AI program lead, GRC-focused AI engineer
 
 ---
 
-## Project 4 (recommended extension): Continuous AI Control Monitoring
+## Project 4: AI Incident Response + Regulatory Escalation Scenario
 ### Employer problem
-Controls are documented once but not continuously monitored after deployment.
+Organizations lack AI-specific crisis playbooks and clear regulatory escalation pathways when model harms surface.
 
 ### Build
-- Implement recurring checks for model drift, data quality drift, explainability availability, and human-override logging.
-- Build daily/weekly compliance status dashboard.
-- Add alerting and exception register.
+- Create a realistic failure scenario (e.g., credit scoring system disproportionately disadvantaging a protected group).
+- Build a week-by-week incident timeline covering:
+  - detection,
+  - internal notification chain,
+  - triage ownership,
+  - legal/regulatory trigger assessment,
+  - customer/stakeholder communication,
+  - root-cause analysis,
+  - model remediation/retraining/revalidation,
+  - post-incident control updates.
+- Include decision logs and role accountability checkpoints.
+
+### Framework linkage
+- Strong alignment to NIST AI RMF Manage function and EU AI Act lifecycle risk expectations.
 
 ### Measurable impact
-- control pass-rate trend
-- mean-time-to-detect control failures
-- unresolved control exceptions aging
+- mean-time-to-detect (MTTD)
+- mean-time-to-escalate (MTTE)
+- mean-time-to-remediate (MTTR)
+- residual risk reduction after corrective actions
 
 ### Stack
-- Python jobs + SQL + Grafana/Metabase + alert hooks (Slack/Telegram)
+- incident runbook docs + escalation matrix + timeline artifact + remediation tracker
 
 ### Role relevance
-- MLOps + governance hybrid, platform risk engineer
+- AI risk operations lead, AI governance manager, model risk/compliance roles
 
 ---
 
-## Project 5 (recommended extension): Third-Party AI Vendor Governance Pack
+## Project 5: High-Risk AI Documentation + Conformity Pack (EU AI Act)
 ### Employer problem
-Enterprises increasingly consume vendor AI without standard due diligence.
+High-risk AI deployments often fail on documentation quality, traceability, and defensibility.
 
 ### Build
-- Vendor assessment questionnaire mapped to EU AI Act + NIST AI RMF controls.
-- Scorecard and approval rubric.
-- Standard contract addendum checklist (auditability, transparency, incident notification, data boundaries).
+- Simulate documentation for a high-risk use case (e.g., automated hiring support system).
+- Include a concise but structured pack covering:
+  - intended purpose and scope,
+  - risk management approach,
+  - data governance and quality controls,
+  - human oversight model,
+  - logging/traceability design,
+  - ongoing performance monitoring and review plan.
+- Keep focus on clarity, structure, and auditability over sheer volume.
 
 ### Measurable impact
-- due-diligence cycle time
-- vendor risk scoring consistency
-- % vendors passing minimum governance bar
+- documentation completeness score
+- traceability coverage across lifecycle controls
+- review readiness checklist pass rate
 
 ### Stack
-- structured forms + scoring engine + report generator
+- structured templates + control crosswalk + evidence index + conformity checklist
 
 ### Role relevance
-- procurement risk, security governance, AI strategy roles
-
+- regulatory AI governance, model risk, AI assurance/compliance roles
 ---
 
 ## Recruiter-facing differentiation strategy
