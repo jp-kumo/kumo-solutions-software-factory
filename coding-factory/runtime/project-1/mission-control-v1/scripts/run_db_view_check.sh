@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="/home/jpadmin/.openclaw/workspace/coding-factory/runtime/project-1/mission-control-v1"
-REPORT_DIR="/home/jpadmin/.openclaw/workspace/data/reports"
+# Detect if we are in GitHub Actions
+if [ "${GITHUB_ACTIONS:-}" = "true" ]; then
+    ROOT_DIR="${GITHUB_WORKSPACE}/coding-factory/runtime/project-1/mission-control-v1"
+    REPORT_DIR="${GITHUB_WORKSPACE}/data/reports"
+else
+    ROOT_DIR="/home/jpadmin/.openclaw/workspace/coding-factory/runtime/project-1/mission-control-v1"
+    REPORT_DIR="/home/jpadmin/.openclaw/workspace/data/reports"
+fi
+
 TS="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
 OUT_JSON="${REPORT_DIR}/mission-control-db-view-check-${TS}.json"
 OUT_LATEST="${REPORT_DIR}/mission-control-db-view-check-latest.json"
@@ -28,6 +35,9 @@ python3 - <<PY > "${ALERT_FILE}"
 import json
 from pathlib import Path
 p = Path("${OUT_JSON}")
+if not p.exists():
+    print("Error: Report file not found.")
+    exit(1)
 r = json.loads(p.read_text())
 failed = [c for c in r.get("checks", []) if not (c.get("exists") and c.get("queryable"))]
 if not failed:
@@ -41,7 +51,7 @@ else:
     print("\n".join(lines))
 PY
 
-# Optional Telegram alert (telegram-ready): set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID
+# Optional Telegram alert
 if [[ "${RC}" -ne 0 && -n "${TELEGRAM_BOT_TOKEN:-}" && -n "${TELEGRAM_CHAT_ID:-}" ]]; then
   MSG="$(cat "${ALERT_FILE}")"
   curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
