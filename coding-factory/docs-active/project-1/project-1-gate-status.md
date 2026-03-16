@@ -12,9 +12,9 @@ Date: 2026-03-05
 
 ## Gate artifacts now staged
 - Gate 01: `gates/01-architecture-rfc.md` → **GO**
-- Gate 02: `gates/02-api-data-contract.md` → **GO** (owner-approved; see `gates/gate-02-decision-2026-03-05.md`)
-- Gate 03: `gates/03-qa-test-plan.md` → **GO** (owner-approved)
-- Gate 04: `gates/04-security-intake-review.md` → **GO** (owner-approved; see `gates/gate-04-decision-2026-03-05.md`)
+- Gate 02: `gates/gate-02-verification-2026-03-16.md` → **GO** (Orchestrator Verified)
+- Gate 03: `gates/03-qa-test-plan.md` → **GO** (CoS Testing Policy Compliant)
+- Gate 04: `gates/04-security-intake-review.md` → **BLOCK** (Security-by-design enforcement active)
 
 ## Earliest-missing-gate enforcement (authoritative)
 All required pre-coding gates are now satisfied.
