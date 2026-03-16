@@ -28,9 +28,40 @@ Jacques needs a way to build authority for **Kumo Solutions** and his personal *
 - **Critical Caveat:** Never post verbatim. Personal expertise is the only differentiator in a saturated market.
 
 ### Step 3: Platform Multiplier (1 Hour)
-- **LinkedIn:** Professional, actionable, mobile-formatted.
-- **Twitter:** Thread-based, high-hook first tweet.
-- **Instagram/FB:** Visual-first or storytelling/personal angle.
+- **Top 8 Multiplier:** Select the top 8 "pillar" ideas. Create 4 platform-specific versions for each (32 posts).
+- **Single-Platform Fillers:** Use the remaining 22 ideas for quick single-platform posts.
+- **Total Output:** 50+ posts from 30 initial ideas.
+
+### Step 4: Scheduling & Automation (30 Min)
+- **Tools:** Buffer (Primary), Later (Instagram).
+- **LinkedIn Strategy:** Mon/Wed/Fri at 8 AM (Professional/Career).
+- **Twitter Strategy:** 3x Daily (9 AM, 1 PM, 6 PM) - Mix of threads and quick insights.
+- **FB/Instagram:** Tue/Thu 7 PM (FB - Story-driven), Daily 12 PM (Insta - Visual/Inspirational).
+
+---
+
+## The Economics & ROI
+- **Time saved:** 56 hours per month (60 hours traditional vs. 4 hours systematic).
+- **Cost:** ~$48/mo (ChatGPT Plus + Buffer + Canva Pro).
+- **ROI:** 58x (based on $50/hour rate).
+
+---
+
+## Common Mistakes to Avoid
+1. **Verbatim AI slop:** Always edit for voice and personality.
+2. **Copy-paste cross-posting:** Optimize format for the specific platform audience.
+3. **Missing the personal touch:** Generic content is ignored; add real stories.
+4. **Daily creation:** Batching is 10x more efficient.
+
+---
+
+## Seven-Day Implementation Plan
+- **Day 1:** Topic choice + audience mapping.
+- **Day 2:** Run ideation prompt + select top 30.
+- **Day 3:** Create and edit first 10 posts.
+- **Day 4:** Next 10 posts + platform adaptations for top 3 ideas.
+- **Day 5:** Final 10 posts + schedule monthly calendar.
+- **Day 6-7:** Rest and monitor engagement.
 
 ---
 
